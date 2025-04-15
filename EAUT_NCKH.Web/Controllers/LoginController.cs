@@ -90,6 +90,7 @@ namespace EAUT_NCKH.Web.Controllers {
                 int refreshTokenExpireMinutes = _configuration.GetValue<int>("Jwt:RefreshTokenExpireTimeMinute");
                 var refreshToken = _authService.GenerateJwtToken(accounts.First().Id, accounts.First().Role.Name, refreshTokenExpireMinutes);
 
+
                 var cookieOptions = new CookieOptions {
                     HttpOnly = true,
                     Secure = true,
