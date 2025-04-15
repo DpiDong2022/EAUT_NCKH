@@ -1,0 +1,314 @@
+﻿@model TopicIndexViewPage
+@{
+    ViewData["Title"] = "Quản lý Đề tài";
+    var index = Model.Pagination.GetStartRow();
+    int startYear = 2008;
+    int endYear = DateTime.Now.Year;
+}
+
+<div class="p-3 h-100 overflow-auto">
+    <div class="bg-white rounded-4 p-3">
+        <div class="d-flex justify-content-between align-items-end flex-nowrap">
+            <h5 class="text-uppercase mb-0">Quản lý Đề tài</h5>
+            <div class="d-flex gap-3 flex-nowrap">
+            </div>
+        </div>
+        <hr />
+        <form asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+            @Html.AntiForgeryToken()
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" name="DepartmentId">
+                        <option value="-1">-------- Chọn Khoa</option>
+                        @foreach (var depart in Model.Departments) {
+                            if (depart.Id == Model.Pagination.DepartmentId) {
+                                <option value="@depart.Id" selected>@depart.Name</option>
+                            } else {
+                                <option value="@depart.Id">@depart.Name</option>
+                            }
+                        }
+                    </select>
+                    <select class="form-select rounded-pill text-center" name="Year">
+                        <option class="text-center" value="-1">-------- Năm</option>
+                        @for (int i = endYear; i >= startYear; i--) {
+                            if (i == Model.Pagination.Year) {
+                                <option selected class="text-center" value="@i">@i</option>
+                            } else {
+                                <option class="text-center" value="@i">@i</option>
+                            }
+                        }
+                    </select>
+                    <input type="text" class="search" data-bs-toggle="tooltip" title="Tìm kiếm bằng tên đề tài" autocomplete="off" autofocus value="@Model.Pagination.Search" name="Search" placeholder="Nhập từ khóa tìm kiếm ..." />
+                    <button type="submit" class="btn_primary text-nowrap">Tìm kiếm</button>
+                </div>
+                <div class="d-flex gap-3 flex-nowrap">
+                    <button data-bs-toggle="modal" data-bs-target="#topic_index_modal" id="btn_add" type="button" class="btn_primary text-nowrap">Đăng ký Đề tài</button>
+                </div>
+            </div>
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3 mb-4">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill" name="StatusId">
+                        <option value="-1">-------- Trạng thái Đề tài</option>
+                        @foreach (var topicStatus in Model.TopicStatuses) {
+                            if (topicStatus.Id == Model.Pagination.Status) {
+                                <option value="@topicStatus.Id" selected>@topicStatus.Name</option>
+                            } else {
+                                <option value="@topicStatus.Id">@topicStatus.Name</option>
+                            }
+                        }
+                    </select>
+                    <select class="form-select rounded-pill" name="SubStatusCode">
+                        <option value="-1">-------- Trạng thái phê duyệt</option>
+                        @foreach (var subStatus in Model.Substatuses) {
+                            if (subStatus.Code == Model.Pagination.SubStatus) {
+                                <option value="@subStatus.Code" selected>@subStatus.Name</option>
+                            } else {
+                                <option value="@subStatus.Code">@subStatus.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="page_length d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <select class="form-select rounded-pill page_len_select" name="PageLength">
+                    @if (Model.Pagination.PageLength == 10) {
+                        <option value="10" selected>--- Chiều dài bảng</option>
+                        <option value="10" selected>10</option>
+                    } else {
+                        <option value="10">10</option>
+                    }
+                    @if (Model.Pagination.PageLength == 20) {
+                        <option value="20" selected>20</option>
+                    } else {
+                        <option value="20">20</option>
+                    }
+                    @if (Model.Pagination.PageLength == 50) {
+                        <option value="50" selected>50</option>
+                    } else {
+                        <option value="50">50</option>
+                    }
+                    @if (Model.Pagination.PageLength == Model.Pagination.TotalRow) {
+                        <option value="@Model.Pagination.TotalRow" selected>Tất cả</option>
+                    } else {
+                        <option value="@Model.Pagination.TotalRow">Tất cả</option>
+                    }
+                </select>
+                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: </p>
+            </div>
+
+            <input value="@(Model.Pagination.PageNumber)" name="PageNumber" type="number" hidden />
+
+            <table id="accountTable" class="table table-hover table-responsive table-borderless mb-0">
+                <thead>
+                    <tr class="align-middle">
+                        <th>#</th>
+                        <th>Tên Đề tài</th>
+                        <th>Giảng viên đăng ký</th>
+                        <th>Ngày đăng ký</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center">Điểm</th>
+                        <th width="350">Ghi chú</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in Model.Topics) {
+                        <tr class="align-bottom" data-content="@topic.Id">
+                            <td class="p-2">@(++index)</td>
+                            <td width="360" class="p-2"><a class="link" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a></td>
+                            <td width="230" class="p-2">@topic.CreatedbyNavigation.Fullname</td>
+                            <td width="110"class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
+                            <td class="p-2 text-center">@topic.StatusNavigation.Name</td>
+                            <td class="p-2 text-center">@topic.Defenseassignments?.FirstOrDefault()?.Finalscore</td>
+                            <td data-bs-toggle="tooltip" title="@(topic.Note?.Length > 40 ? @topic.Note : "")" class="p-2">@(topic.Note?.Length > 40 ? @topic.Note.Substring(0, 40) + "..." : @topic.Note)</td>
+                            <td class="text-end d-flex align-items-center justify-content-end gap-2 flex-nowrap">
+                                <button tooltip="Xóa thông tin đề tài" type="button" class="p-0">
+                                    <img src="/images/error.png" height="40" /></button>
+                                <button tooltip="Cập nhật thông tin" type="button" class="p-0">
+                                    <img src="/images/edit.png" height="40" /></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <nav>
+                @{
+                    int totalPage = Model.Pagination.GetTotalPage();
+                    Model.CalculatePagination();
+                }
+                <ul class="pagination">
+                    <li role="button" class="page-item page-first @(Model.Pagination.PageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="#">&laquo;&laquo;</a>
+                    </li>
+                    <li role="button" class="page-item page-left @(Model.Pagination.PageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="#">&laquo;</a>
+                    </li>
+
+                    @if (Model.Start > Model.Range - 2) {
+                        <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
+                    }
+
+                    @for (int i = Model.Start; i <= Model.End; i++) {
+                        <li role="button" class="page-item item @(Model.Pagination.PageNumber == i ? "active" : "")">
+                            <a class="page-link" href="#">@i</a>
+                        </li>
+                    }
+
+                    @if (Model.End < totalPage) {
+                        <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
+                    }
+
+                    <li role="button" class="page-item page-right @(Model.Pagination.PageNumber == totalPage ? "disabled" : "")">
+                        <a class="page-link" href="#">&raquo;</a>
+                    </li>
+                    <li role="button" data-number="@totalPage" class="page-item page-last @(Model.Pagination.PageNumber == totalPage ? "disabled" : "")">
+                        <a class="page-link" href="#">&raquo;&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade no_reset" id="topic_index_modal" tabindex="-1" aria-labelledby="">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content rounded-5 h-100">
+            <div class="modal-header">
+                <h4 class="modal-title" id="">Đăng ký Đề tài</h4>
+            </div>
+            <div class="modal-body">
+                <form class="d-flex flex-column gap-3">
+                    @Html.AntiForgeryToken()
+                    <input type="number" name="id" value="0" hidden />
+                    <input type="text" name="title" placeholder="Nhập tên đề tài" />
+                    <input type="text" name="note" placeholder="Nhập mô tả (nếu có)" />
+                    <div class="row">
+                        <div class="col col-6">
+                            <div class="form-group">
+                                <label>Tìm kiếm Giảng viên hướng dẫn thứ 2</label>
+                                <input type="text" name="findteacher" placeholder="Nhập email hoặc số điện thoại ..." />
+                            </div>
+                        </div>
+                        <div class="col col-6 form-group">
+                            <label>Giảng viên hướng dẫn thứ 2</label>
+                            <input disabled type="text" data-content placeholder="Tên giảng viên" />
+                        </div>
+                    </div>
+                    <hr class="m-0"/>
+                    <h5 class="mt-auto">Bảng nhóm sinh viên</h5>
+                    <table id="student_list" class="">
+                        <thead>
+                            <tr>
+                                <th>Mã sinh viên</th>
+                                <th>Họ và tên</th>
+                                <th>Số điện thoại</th>
+                                <th width="250">Email</th>
+                                <th>Vai trò</th>
+                                <th>Tên lớp</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="align-bottom">
+                                <td>20211374</td>
+                                <td>Phùng Đại Đồng</td>
+                                <td>0368728267</td>
+                                <td>phungdaidong@gmail.com</td>
+                                <td>Trưởng nhóm</td>
+                                <td>DC.IT.12.10</td>
+                                <td>
+                                    <button tooltip="Xóa" type="button" class="p-0">
+                                        <img src="/images/error.png" height="40" />
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr class="m-0 mb-3" />
+                </form>
+                <form id="addStudentForm">
+                    <div class="row">
+                        <div class="form-group col col-3">
+                            <input class="number" type="text" placeholder="Nhập mã sinh viên" name="StudentCode" />
+                        </div>
+                        <div class="form-group col col-3">
+                            <input type="text" placeholder="Nhập Họ và tên" name="Fullname" />
+                        </div>
+                        <div class="form-group col col-3">
+                            <input type="text" placeholder="Nhập email" name="Email" />
+                        </div>
+                        <div class="form-group col col-3">
+                            <input class="number" type="text" placeholder="Nhập số điện thoại" name="PhoneNumber" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col col-4">
+                            <select class="form-select" name="TrainingProgramId">
+                                <option value="-1">---- Chọn Trương trình giảng dạy</option>
+                                @foreach (var tp in Model.Trainingprograms) {
+                                    <option value="@tp.Id" data-code="@tp.Code">@tp.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group col col-4">
+                            <select class="form-select" name="DepartmentId">
+                                <option value="-1">---- Chọn Khoa / Viện</option>
+                                @foreach (var depart in Model.Departments) {
+                                    <option value="@depart.Id">@depart.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group col col-4">
+                            <select class="form-select pe-5" name="MajorId">
+                                <option value="-1">---- Chọn Chuyên ngành</option>
+                                @foreach (var major in Model.Majors) {
+                                    <option value="@major.Id" data-code="@major.Code">@major.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col col-6">
+                            <select class="form-select" name="role">
+                                <option value="-1">----- Chọn Vai trò</option>
+                                <option value="0">Thành viên</option>
+                                <option value="1">Trưởng nhóm</option>
+                            </select>
+                        </div>
+                        <div class="form-group col col-6">
+                            <input type="text" placeholder="Nhập tên lớp" name="ClassName" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button class="close_btn new">Làm mới</button>
+                        <button class="btn_primary add">Thêm</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="save_btn">Đăng ký</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script type="text/javascript">
+        const text = {
+            accountModalId: "account_index_modal",
+            departInputContainerId: "department_container",
+            majorInputContainerId: "major_container",
+            academicTitleInputContainerId: "academicTitle_container",
+            studentCodeInputContainerId: "studentCode_container",
+            classNameInputContainerId: "className_container",
+            programInputContainerId: "program_container"
+
+        };
+
+    </script>
+}

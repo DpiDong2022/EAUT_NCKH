@@ -1,0 +1,51 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@using EAUT_NCKH.Web.Models
+@{
+    var committeeTypes = ViewBag.CommitteeTypes as List<Committeetype> ?? new List<Committeetype>();
+    var trainingProgramList = ViewBag.TrainingProgramList as List<Trainingprogram> ?? new List<Trainingprogram>();
+    var majorList = ViewBag.majorList as List<Major> ?? new List<Major>();
+}
+
+<table>
+    <thead>
+    <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Thứ tự</th>
+    </tr>
+    </thead>
+    <tbody>
+        @foreach (var type in committeeTypes) {
+            <tr>
+                <td>@type.Id</td>
+                <td>@type.Name</td>
+                <td>@type.Displayorder</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Code</th>
+            <th>Khoa</th>
+            <th>Thứ tự</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var type in majorList) {
+            <tr>
+                <td>@type.Id</td>
+                <td>@type.Name</td>
+                <td>@type.Code</td>
+                <td>@type.Displayorder</td>
+            </tr>
+        }
+    </tbody>
+</table>

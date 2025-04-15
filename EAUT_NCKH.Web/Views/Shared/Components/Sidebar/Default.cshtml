@@ -1,0 +1,41 @@
+﻿@model List<EAUT_NCKH.Web.DTOs.MenuItem>;
+@{
+    int index = 1;
+    string returnUrl = ViewBag.ReturnUrl;
+}
+<div class="accordion">
+    <div class="navbar-brand d-flex justify-content-start align-items-center py-0 px-3 m-0 gap-3">
+        <img src="/images/EAUT_LOGO.png" height="50" alt="eaut logo" />
+        <p class="mb-0 text-wrap text-center fw-semibold fs-6">Quản lý Sinh viên Nghiên cứu Khoa học</p>
+    </div>
+    @foreach (var item in Model) {
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="flush-heading-@index">
+                @if (item.SubItems.Count > 0) {
+                    <a class="accordion-button @(item.Url == returnUrl ? "" : "collapsed")"
+                       type="button"
+                       data-bs-toggle="collapse"
+                       data-bs-target="#flush-collapse-@index"
+                       aria-expanded="false"
+                       aria-controls="flush-collapse-@index"
+                       href="@item.Url">
+                        @item.Title
+                    </a>
+                } else {
+                    <a class="accordion-button url-link @(item.Url == returnUrl ? "" : "collapsed") single_btn"
+                       href="@item.Url">
+                        @item.Title
+                    </a>
+                }
+            </h2>
+            @if (item.SubItems.Count > 0) {
+                <ul id="flush-collapse-@index" class="accordion-collapse collapse list-unstyled" aria-labelledby="flush-heading-@index" data-bs-parent="#accordionFlushExample">
+                    @foreach (var subItem in item.SubItems) {
+                        <li class="nav-item"><a class="url-link" href="@subItem.Url">@subItem.Title</a></li>
+                    }
+                </ul>
+            }
+        </div>
+        index++;
+    }
+</div>

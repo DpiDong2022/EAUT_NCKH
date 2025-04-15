@@ -1,0 +1,342 @@
+html {
+    font-size: 14px;
+}
+
+div, a, p, td, th, input, option, button{
+    font-size: 16px;
+}
+
+span, th{
+    font-size: 14px;
+}
+
+* {
+    font-family: 'Manrope', sans-serif;
+    color: black;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+.form-group label{
+    margin-bottom: 8px;
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: none;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+}
+.text-justify {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+label.required::after{
+    content: " *";
+    color: red;
+}
+
+input[type="text"],
+input[type="password"],
+select {
+    padding: 12px 16px !important;
+    border-radius: 32px!important;
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: #f0f0f0!important;
+    color: #8c8c8c;
+    box-shadow: none!important;
+}
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="password"]:focus {
+        font-weight: bold;
+    }
+
+    a {
+        text-decoration: none;
+        text-underline-offset: 4px;
+        cursor: pointer;
+    }
+.form-switch input[type="checkbox"]:checked {
+    background-color: #00A9E0;
+}
+
+.form-switch input[type="checkbox"],
+.form-switch input[type="checkbox"]:focus,
+.form-switch input[type="checkbox"]::before {
+    border-color: #173974;
+}
+
+input.search {
+    width: 200px;
+    max-width: 200px;
+    font-size: 14px;
+}
+
+select {
+    min-width: 180px;
+    max-width: 250px;
+    width: 180px !important;
+}
+
+    select.short {
+        min-width: 100px;
+        max-width: 250px;
+        width: 100px !important;
+    }
+
+.modal select {
+    min-width: unset;
+    max-width: unset;
+    width: 100% !important;
+}
+
+.page_filter select {
+    min-width: fit-content;
+    max-width: unset;
+    width: unset !important;
+    padding: 13px 36px 13px 16px!important;
+    background-color: white!important;
+}
+
+.page_length select {
+    background-color: white !important;
+    padding-top: 5px!important;
+    padding-bottom: 5px!important;
+}
+
+button {
+    border: none;
+    outline: none;
+    background-color: transparent;
+    padding: 13px 16px;
+    border-radius: 32px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+a.link:hover {
+    text-decoration: underline;
+    color: #00A9E0;
+}
+
+a.link {
+    color: #173974;
+}
+
+button.btn_primary {
+    background-color: #173974;
+    color: #ffffff;
+}
+
+.btn_primary:hover {
+    background-color: #00A9E0;
+    color: #ffffff;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.edit_btn {
+    background-color: white;
+    border: 1px solid #173974;
+}
+
+    .edit_btn:hover {
+        background-color: #00A9E0;
+        border: 1px solid #00A9E0;
+        color: white;
+    }
+
+.save_btn {
+    background-color: #00A9E0;
+    color: white;
+    margin: 0;
+}
+
+.close_btn {
+    background-color: white;
+    border: 1px solid black;
+    margin: 0;
+}
+
+.pointer, .pointer a, .pointer label {
+    cursor: pointer;
+}
+
+input[disabled], .no-edit{
+    cursor: not-allowed;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+input:focus{
+    color: black;
+}
+.password_input_container {
+    position: relative;
+}
+    .password_input_container input {
+        padding-right: 46px;
+    }
+
+    .password_input_container .icon_eye {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+    }
+
+.modal-footer{
+    gap: 12px;
+    border:none;
+}
+
+.modal-header {
+    border: none;
+}
+
+.field-validation-error span,
+.field-validation-error ,
+.error {
+    color: orangered;
+    margin: 0!important;
+    font-size: 14px;
+}
+
+.rounded-4{
+    border-radius: 0.8rem;
+}
+
+.rounded-5 {
+    border-radius: 1.6rem;
+}
+
+/* Manrope Regular */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/manrope/Manrope-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Manrope Bold */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope/Manrope-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Manrope ExtraBold */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope/Manrope-ExtraBold.ttf') format('truetype');
+    font-weight: 800; /* ExtraBold */
+    font-style: normal;
+}
+
+/* Manrope SemiBold */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope/Manrope-SemiBold.ttf') format('truetype');
+    font-weight: 600; /* SemiBold */
+    font-style: normal;
+}
+
+/* Manrope Medium */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope/Manrope-Medium.ttf') format('truetype');
+    font-weight: 500; /* Medium */
+    font-style: normal;
+}
+
+/* Manrope Light */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope/Manrope-Light.ttf') format('truetype');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+/* Manrope ExtraLight */
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope/Manrope-ExtraLight.ttf') format('truetype');
+    font-weight: 200; /* ExtraLight */
+    font-style: normal;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+    display: none !important;
+}
+
+/* Scrollbar Track */
+::-webkit-scrollbar {
+    width: 7px; /* for vertical scrollbars */
+    height: 7px; /* for horizontal scrollbars */
+}
+
+/* Scrollbar Thumb (the ball) */
+::-webkit-scrollbar-thumb {
+    background-color: lightgray;
+    border-radius: 4px;
+}
+
+/* Scrollbar Track Background */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 0.1s linear, opacity 0.1s linear;
+    transition-delay: 0s;
+}
+
+.modal.fade {
+    transition: opacity 0.1s linear;
+    transition-delay: 0s;
+}
+
+.modal-backdrop, .modal-backdrop.fade {
+    transition-duration: 0s;
+}
+
+.modal .modal-header{
+    font-weight: 500;
+}
+
+.pagination{
+    justify-content: center;
+}
+
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    border-radius: 0;
+}
+
+.modal input, 
+.modal select{
+    color: black;
+}
+
+input[disabled], select[disabled], button[disabled]{
+    cursor: not-allowed;
+    opacity: 0.5;
+}

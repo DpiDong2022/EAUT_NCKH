@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EAUT NCKH</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/EAUT_NCKH.Web.styles.css" asp-append-version="true" />
+    <link rel="icon" type="img/png" href="/images/EAUT_LOGO.png" />
+</head>
+<body>
+    <div id="page_wrapper" class="">
+        <div id="page-loader" class="" style="z-index: 9999;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="side_bar1" class="side_bar">
+            @await Component.InvokeAsync("Sidebar")
+        </div>
+
+        <div id="content_wrapper" class="">
+            <header class="bg-white">
+                <div class="d-flex justify-content-between align-items-center gap-3 h-100">
+                    <a class="link ms-3" href="dang-xuat"></a>
+                    <div class="d-flex flex-nowrap align-items-end gap-3 me-4">
+                        <div id="notification_icon" 
+                            class="d-flex rounded-circle border border-warning" 
+                            role="button"
+                            data-bs-toggle="modal"
+                             data-bs-target="#notice_model">
+                            <img class="m-auto" height="25" width="25" src="/images/notification-bell.png" />
+                            <p class="news text-danger">New</p>
+                        </div>
+                        <div id="avt_icon" class="p-2 rounded-circle border border-primary" role="button"
+                             data-bs-toggle="modal"
+                             data-bs-target="#avt_model"
+                        >
+                            <img class="m-auto" height="35" src="/images/default_avt.png" />
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main role="main" class="">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+
+    <div class="modal fade no_reset" id="avt_model" tabindex="-1" aria-labelledby="exampleModalLabel" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered " role="document">
+            <div class="modal-content rounded-5">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Thông tin cá nhân</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="d-flex flex-column gap-3">
+                        <div id="avt_container" class="d-flex flex-column gap-2">
+                            <img class="m-auto rounded-circle" height="100" src="/images/default_avt.png" />
+                            <div class="d-flex justify-content-center gap-3">
+                                <button type="button" class="edit_btn edit_btn_avt">Thay đổi ảnh</button>
+                                <button type="button" class="save_btn save_avt d-none">Cập nhật</button>
+                                <button type="button" class="close_btn d-none">Hủy</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-4">
+                                <label>Họ và tên</label>
+                            </div>
+                            <div class="col col-7">
+                                <input type="text" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-4">
+                                <label>Giới tính</label>
+                            </div>
+                            <div class="col col-7">
+                                <input type="text" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-4">
+                                <label>Email</label>
+                            </div>
+                            <div class="col col-7">
+                                <input type="text" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-4">
+                                <label>Số điện thoại</label>
+                            </div>
+                            <div class="col col-7">
+                                <input type="text" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-4">
+                                @* <a id="btn_changepass" class="link" role="button">Đổi mật khẩu</a> *@
+                                <a id="btn_changepass" class="link" role="button" data-bs-target="#changePassword_modal" data-bs-toggle="modal" >Đổi mật khẩu</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-between mt-1">
+                    <button type="button" class="edit_btn">Sửa thông tin</button>
+                    <button type="button" class="save_btn save d-none">Lưu thông tin</button>
+                    <div class="d-flex justify-content-between gap-3">
+                        <button type="button" class="close_btn" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="save_btn" onclick="location.href='dang-xuat'">Đăng xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--MOdal error-->
+    <div class="modal fade" id="error_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-5">
+                <div class="modal-header flex-column pb-2">
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
+                    <img class="mx-auto" src="/images/error.png" height="70" width="70" />
+                </div>
+                <div class="modal-body pt-0">
+                    <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn mx-auto" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Modal Success-->
+    <div class="modal fade" id="success_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-5">
+                <div class="modal-header flex-column pb-2">
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
+                    <img class="mx-auto" src="/images/success.png" height="70" width="70" />
+                </div>
+                <div class="modal-body pt-0">
+                    <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn mx-auto" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Modal warning-->
+    <div class="modal fade" id="warning_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-5">
+                <div class="modal-header flex-column pb-2">
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
+                    <img class="mx-auto" src="/images/warning.png" height="70" width="70" />
+                </div>
+                <div class="modal-body pt-0">
+                    <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn mx-auto" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!--Đổi mật khẩu-->
+    <div class="modal fade" id="changePassword_modal" tabindex="-1" aria-labelledby="" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content rounded-5">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="">Đổi mật khẩu</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex flex-column justify-content-center">
+                        <form asp-asp-controller="Home" asp-action="ChangePassword">
+                            <div class="form-group">
+                                <label for="currentPass">Mật khẩu hiện tại</label>
+                                <div class="password_input_container">
+                                    <input type="password" name="currentPass" placeholder="Nhập mật khẩu hiện tại" />
+                                    <img src="/icons/eye_close.png" class="icon_eye " height="20" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="currentPass">Mật khẩu mới</label>
+                                <div class="password_input_container">
+                                    <input type="password" name="newPass" placeholder="Nhập mật khẩu mới" />
+                                    <img src="/icons/eye_close.png" class="icon_eye " height="20" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPass">Xác nhận mật khẩu mới</label>
+                                <div class="password_input_container">
+                                    <input type="password" name="confirmPass" placeholder="Xác nhận mật khẩu mới" />
+                                    <img src="/icons/eye_close.png" class="icon_eye " height="20" />
+                                </div>
+                            </div>
+                        </form>
+                        <div class="password-rules">
+                          <h5>🔒 Quy tắc đặt mật khẩu:</h5>
+                          <ul>
+                            <li>Ít nhất 8 ký tự</li>
+                            <li>Chứa chữ cái in hoa (A–Z)</li>
+                            <li>Chứa chữ cái thường (a–z)</li>
+                            <li>Chứa ít nhất một số (0–9)</li>
+                            <li>Chứa ít nhất một ký tự đặc biệt (ví dụ: !@@#$%^&*)</li>
+                            <li>Không được trùng với tên tài khoản hoặc thông tin cá nhân dễ đoán</li>
+                          </ul>
+                          <small>Ví dụ: <code>P@ssword123</code>, <code>MyS3cur3!</code></small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="save_btn">Đổi mật khẩu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/lib/jquery/dist/jquery.min.js" ></script>
+    <script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+
+        $("#avt_model .edit_btn").on("click", function(){
+            $(this).addClass("d-none");
+            $("#avt_model .save_btn.save").removeClass("d-none");
+        })
+
+        $("#avt_model").on("hidden.bs.modal", function (e) {
+            $("#avt_model .edit_btn").removeClass("d-none");
+            $("#avt_model .save_btn.save").addClass("d-none");
+        })
+
+        $("#avt_container .edit_btn_avt").on("click", function(){
+            $(this).addClass("d-none");
+            $("#avt_container .save_btn.save_avt").removeClass("d-none");
+            $("#avt_container .close_btn").removeClass("d-none");
+        })
+
+        $("#avt_container .close_btn").on("click", function(){
+            $(this).addClass("d-none");
+            $("#avt_container .save_btn.save_avt").addClass("d-none");
+            $("#avt_container .edit_btn").removeClass("d-none");
+        })
+    </script>
+</body>
+</html>

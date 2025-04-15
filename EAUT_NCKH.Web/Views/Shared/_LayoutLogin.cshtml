@@ -1,0 +1,67 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EAUT NCKH</title>
+    <link href="~/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" type="img/png" href="/images/EAUT_LOGO.png" />
+</head>
+<body>
+    <main role="main" class="container w-100 vh-100 p-0">
+        <div id="page-loader" class="" style="z-index: 9999;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        @RenderBody()
+    </main>
+    <!--MOdal error-->
+    <div class="modal fade" id="error_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-5">
+                <div class="modal-header flex-column pb-2">
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
+                    <img class="mx-auto" src="/images/error.png" height="70" width="70" />
+                </div>
+                <div class="modal-body pt-0">
+                    <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn mx-auto" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Modal Success-->
+    <div class="modal fade" id="success_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-5">
+                <div class="modal-header flex-column pb-2">
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
+                    <img class="mx-auto" src="/images/success.png" height="70" width="70" />
+                </div>
+                <div class="modal-body pt-0">
+                    <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn mx-auto" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
