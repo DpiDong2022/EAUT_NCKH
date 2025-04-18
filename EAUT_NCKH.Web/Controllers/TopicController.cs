@@ -91,5 +91,22 @@ namespace EAUT_NCKH.Web.Controllers
         public async Task<IActionResult> Hai() {
             return View();
         }
+
+        [HttpPost("get-second-teacher")]
+        public async Task<IActionResult> FindSecondTeacher(string email) {
+            var token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
+            var senderId = _authService.GetAccountIdFromToken(token??"");
+            var data = await _topicService.GetSecondTeacherForTopicRegister(senderId ?? 0, email);
+            return Ok(data);
+        }
+
+        [HttpPost("get-student")]
+        public async Task<IActionResult> FindStudent(int studentCode) {
+            var token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
+            var senderId = _authService.GetAccountIdFromToken(token??"");
+            var data = await _topicService.GetStudentTopic(senderId ?? 0, studentCode);
+            return Ok(data);
+        }
     }
+
 }

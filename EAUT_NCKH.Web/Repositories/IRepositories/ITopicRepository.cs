@@ -7,5 +7,7 @@ namespace EAUT_NCKH.Web.Repositories.IRepositories {
 
         Task<List<Topic>>? GetDataTable(TopicDataTableOptions options, int userId);
         Task<double> GetCountDataTable(TopicDataTableOptions options, int userId);
+        Task<ResponseData> GetSecondTeacherForTopicRegister(int senderId, string email);
+        Task<ResponseData> GetStudentTopic(int senderId, int studentCode);
     }
 }

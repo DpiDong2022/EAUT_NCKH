@@ -7,7 +7,7 @@ public partial class Student
 {
     public int Id { get; set; }
 
-    public int Accountid { get; set; }
+    public int? Accountid { get; set; }
 
     public DateTime Createddate { get; set; }
 
@@ -19,7 +19,16 @@ public partial class Student
 
     public string Classname { get; set; } = null!;
 
-    public virtual Account Account { get; set; } = null!;
+    public string Fullname { get; set; } = null!;
+
+    public string Email { get; set; } = null!;
+
+    public string Phonenumber { get; set; } = null!;
+
+    public int? Departmentid { get; set; }
+    public virtual Department? Department { get; set; }
+
+    public virtual Account? Account { get; set; } = null!;
 
     public virtual Major Major { get; set; } = null!;
 

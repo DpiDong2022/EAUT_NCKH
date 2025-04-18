@@ -1,4 +1,5 @@
-﻿@model TopicIndexViewPage
+﻿@using EAUT_NCKH.Web.Enums
+@model TopicIndexViewPage
 @{
     ViewData["Title"] = "Quản lý Đề tài";
     var index = Model.Pagination.GetStartRow();
@@ -124,11 +125,17 @@
                             <td class="p-2 text-center">@topic.StatusNavigation.Name</td>
                             <td class="p-2 text-center">@topic.Defenseassignments?.FirstOrDefault()?.Finalscore</td>
                             <td data-bs-toggle="tooltip" title="@(topic.Note?.Length > 40 ? @topic.Note : "")" class="p-2">@(topic.Note?.Length > 40 ? @topic.Note.Substring(0, 40) + "..." : @topic.Note)</td>
-                            <td class="text-end d-flex align-items-center justify-content-end gap-2 flex-nowrap">
-                                <button tooltip="Xóa thông tin đề tài" type="button" class="p-0">
-                                    <img src="/images/error.png" height="40" /></button>
-                                <button tooltip="Cập nhật thông tin" type="button" class="p-0">
-                                    <img src="/images/edit.png" height="40" /></button>
+                            <td class="text-end ">
+                                @if (topic.Status == (int)TopicStatusEnumId.PENDING_REGISTRATION) {
+                                    <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
+                                        <button tooltip="Xóa thông tin đề tài" type="button" class="p-0">
+                                            <img src="/images/error.png" height="40" />
+                                        </button>
+                                        <button tooltip="Cập nhật thông tin" type="button" class="p-0">
+                                            <img src="/images/edit.png" height="40" />
+                                        </button>
+                                    </div>
+                                }
                             </td>
                         </tr>
                     }
@@ -180,21 +187,29 @@
                 <h4 class="modal-title" id="">Đăng ký Đề tài</h4>
             </div>
             <div class="modal-body">
-                <form class="d-flex flex-column gap-3">
+                <form id="main_form" class="d-flex flex-column gap-3">
                     @Html.AntiForgeryToken()
-                    <input type="number" name="id" value="0" hidden />
-                    <input type="text" name="title" placeholder="Nhập tên đề tài" />
-                    <input type="text" name="note" placeholder="Nhập mô tả (nếu có)" />
+                    <input type="number" name="Id" value="0" hidden />
+                    <div class="form-group mb-0">
+                        <label class="required">Tên đề tài</label>
+                        <input type="text" name="Title" placeholder="Nhập tên đề tài" />
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="required">Mô tả</label>
+                        <input type="text" name="Note" placeholder="Nhập mô tả (nếu có)" />
+                    </div>
                     <div class="row">
-                        <div class="col col-6">
+                        <div class="col col-12 col-lg-6">
                             <div class="form-group">
                                 <label>Tìm kiếm Giảng viên hướng dẫn thứ 2</label>
-                                <input type="text" name="findteacher" placeholder="Nhập email hoặc số điện thoại ..." />
+                                <input type="text" name="secondTeacherSearch" placeholder="Nhập email hoặc số điện thoại ..." />
+                                <input type="number" name="secondTeacherid" hidden />
+                                <span class="error"></span>
                             </div>
                         </div>
-                        <div class="col col-6 form-group">
+                        <div class="col col-12 col-lg-6 form-group">
                             <label>Giảng viên hướng dẫn thứ 2</label>
-                            <input disabled type="text" data-content placeholder="Tên giảng viên" />
+                            <input disabled type="text" name="teacherName" data-content placeholder="Tên giảng viên" />
                         </div>
                     </div>
                     <hr class="m-0"/>
@@ -202,50 +217,39 @@
                     <table id="student_list" class="">
                         <thead>
                             <tr>
-                                <th>Mã sinh viên</th>
-                                <th>Họ và tên</th>
-                                <th>Số điện thoại</th>
-                                <th width="250">Email</th>
-                                <th>Vai trò</th>
-                                <th>Tên lớp</th>
+                                <th class="p-2" width="100">Mã sinh viên</th>
+                                <th class="p-2" width="180">Họ và tên</th>
+                                <th class="p-2">Số điện thoại</th>
+                                <th class="p-2" width="250">Email</th>
+                                <th class="p-2">Vai trò</th>
+                                <th class="p-2">Tên lớp</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="align-bottom">
-                                <td>20211374</td>
-                                <td>Phùng Đại Đồng</td>
-                                <td>0368728267</td>
-                                <td>phungdaidong@gmail.com</td>
-                                <td>Trưởng nhóm</td>
-                                <td>DC.IT.12.10</td>
-                                <td>
-                                    <button tooltip="Xóa" type="button" class="p-0">
-                                        <img src="/images/error.png" height="40" />
-                                    </button>
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
+                    <label class="error col col-12 text-center" for="student-table" id="student-table-error"></label>
                     <hr class="m-0 mb-3" />
                 </form>
                 <form id="addStudentForm">
                     <div class="row">
-                        <div class="form-group col col-3">
+                        <div class="form-group col col-12 col-lg-3">
                             <input class="number" type="text" placeholder="Nhập mã sinh viên" name="StudentCode" />
+                            <label class="error" for="StudentCode" style="display: none;" id="StudentCode-error"></label>
                         </div>
-                        <div class="form-group col col-3">
-                            <input type="text" placeholder="Nhập Họ và tên" name="Fullname" />
+                        <div class="form-group col col-12 col-lg-3">
+                            <input type="text" class="only_string" placeholder="Nhập Họ và tên" name="Fullname" />
                         </div>
-                        <div class="form-group col col-3">
+                        <div class="form-group col col-12 col-lg-3">
                             <input type="text" placeholder="Nhập email" name="Email" />
                         </div>
-                        <div class="form-group col col-3">
+                        <div class="form-group col col-12 col-lg-3">
                             <input class="number" type="text" placeholder="Nhập số điện thoại" name="PhoneNumber" />
                         </div>
                     </div>
                     <div class="row">
-                        <div class="form-group col col-4">
+                        <div class="form-group col col-12 col-lg-4">
                             <select class="form-select" name="TrainingProgramId">
                                 <option value="-1">---- Chọn Trương trình giảng dạy</option>
                                 @foreach (var tp in Model.Trainingprograms) {
@@ -253,38 +257,42 @@
                                 }
                             </select>
                         </div>
-                        <div class="form-group col col-4">
+                        <div class="form-group col col-12 col-lg-4">
                             <select class="form-select" name="DepartmentId">
                                 <option value="-1">---- Chọn Khoa / Viện</option>
                                 @foreach (var depart in Model.Departments) {
-                                    <option value="@depart.Id">@depart.Name</option>
+                                    <option selected value="@depart.Id">@depart.Name</option>
                                 }
                             </select>
                         </div>
-                        <div class="form-group col col-4">
+                        <div class="form-group col col-12 col-lg-4">
                             <select class="form-select pe-5" name="MajorId">
                                 <option value="-1">---- Chọn Chuyên ngành</option>
                                 @foreach (var major in Model.Majors) {
-                                    <option value="@major.Id" data-code="@major.Code">@major.Name</option>
+                                    if (major.Departmentid == Model.Pagination.DepartmentId || Model.Pagination.DepartmentId == -1) {
+                                        <option data-departId="@major.Departmentid" value="@major.Id" data-code="@major.Code">@major.Name</option>
+                                    }
                                 }
                             </select>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="form-group col col-6">
+                        <div class="form-group col col-12 col-lg-6">
                             <select class="form-select" name="role">
                                 <option value="-1">----- Chọn Vai trò</option>
                                 <option value="0">Thành viên</option>
                                 <option value="1">Trưởng nhóm</option>
                             </select>
+                            <label class="error" for="role" style="display: none;" id="role-error"></label>
                         </div>
-                        <div class="form-group col col-6">
+                        <div class="form-group col col-12 col-lg-6">
                             <input type="text" placeholder="Nhập tên lớp" name="ClassName" />
                         </div>
+                        <label class="error col col-12 text-center" for="all" style="display: none;" id="all-error"></label>
                     </div>
-                    <div class="d-flex justify-content-center gap-3">
-                        <button class="close_btn new">Làm mới</button>
-                        <button class="btn_primary add">Thêm</button>
+                    <div class="d-flex justify-content-center gap-3 mt-2">
+                        <button type="button" class="close_btn new">Làm mới</button>
+                        <button type="button" class="btn_primary add">Thêm</button>
                     </div>
                 </form>
             </div>
@@ -310,5 +318,369 @@
 
         };
 
+        const MainForm = $("#main_form");
+        const StudentForm = $("#addStudentForm");
+
+        StudentForm.find(".close_btn.new").click(function() {
+            StudentForm[0].reset();
+            StudentForm.validate().resetForm();
+        })
+
+        MainForm.find("input[name='secondTeacherSearch']").on("blur", function() {
+            if (!this.value) {
+                MainForm.find("input[name='teacherName']").val("");
+                $(this).closest(".form-group").find(".error").text("");
+                return;
+            }
+            FindSecondTeacher(this)
+        })
+
+        MainForm.on("click", ".delete_btn", function() {
+            $(this).closest("tr").remove();
+        })
+
+
+        StudentForm.find("select[name='DepartmentId']").change(function () {
+            const select = $(this);
+            const selectValue = select.val();
+            const majorSelect = StudentForm.find("select[name='MajorId']");
+            majorSelect.val(-1);
+            RendClassName()
+
+            if (selectValue == -1) {
+                return;
+            }
+            majorSelect.find("option[value!='-1']").each(function () {
+                const option = $(this);
+                if (option.data("departid") == selectValue) {
+                    option.removeClass("d-none");
+                }
+                else {
+                    option.addClass("d-none");
+                }
+            })
+        })
+
+        StudentForm.find("select[name='MajorId']").change(RendClassName)
+        StudentForm.find("select[name='TrainingProgramId']").change(RendClassName)
+
+        function RendClassName(){
+            const trainingProgram = StudentForm.find("select[name='TrainingProgramId']");
+            const major = StudentForm.find("select[name='MajorId']");
+            const className = StudentForm.find("input[name='ClassName']");
+
+            className.val("");
+            let name = "";
+            if (trainingProgram.val() != -1) {
+                const trainingProgramCode = trainingProgram.find("option:selected").data("code");
+                name += trainingProgramCode + ".";
+            }
+
+            if (major.val() != -1) {
+                const majorCode = major.find("option:selected").data("code");
+                name += majorCode + ".";
+            }
+
+            className.val(name)
+        }
+
+        StudentForm.find("input[name='StudentCode']").on("blur", function() {
+            if(!this.value){
+                StudentForm[0].reset();
+                StudentForm.validate().resetForm();
+                return;
+            }
+
+            if($("#student_list input[name='StudentCode']").val()==this.value){
+                $("#StudentCode-error").text("Đã tồn tại sinh viên trên bảng nhóm sinh viên").css("display", "block");
+                return;
+            }
+            $("#StudentCode-error").css("display", "none");
+            FindStudent(this)
+        });
+
+        function FindSecondTeacher(input) {
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("FindSecondTeacher", "Topic")',
+                type: 'POST',
+                data: {
+                    email: input.value
+                }
+            }).then((response) => {
+                console.log(response);
+                $("#page-loader").css("display", "none");
+                if(response.code == 1){
+                    $(input).closest(".form-group").find(".error").text(response.message);
+                }
+                else{
+                    $(input).closest(".form-group").find(".error").text("");
+                    MainForm.find("input[name='teacherName']").val(response.data.fullname);
+                    MainForm.find("input[name='secondTeacherid']").val(response.data.id);
+                }
+            }).
+            catch((Error) => {
+                    $("#page-loader").css("display", "none");
+                    console.log(`Xảy ra lỗi khi tìm giảng viên ${Error}`);
+            })
+        }
+
+        function FindStudent(input) {
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("FindStudent", "Topic")',
+                type: 'POST',
+                data: {
+                    studentCode: input.value
+                }
+            }).then((response) => {
+                console.log(response);
+                $("#page-loader").css("display", "none");
+                if (response.code == 0) {
+                    FillStudentForm(response.data);
+                    StudentForm.valid();
+                }
+                else{
+                    if(response.code == 2){
+                        $("#StudentCode-error").css("display", "none");
+                        return;
+                    }
+                    StudentForm.find("input[name='StudentCode']").val("");
+                    $("#StudentCode-error").text(response.message).css("display", "block");
+                }
+            }).
+                catch((Error) => {
+                    $("#page-loader").css("display", "none");
+                    console.log(`Xảy ra lỗi khi tìm sinh viên ${Error}`);
+                })
+        }
+
+        function FillStudentForm(data) {
+            StudentForm.find("input[name='Fullname']").val(data.fullname);
+            StudentForm.find("input[name='Email']").val(data.email);
+            StudentForm.find("input[name='PhoneNumber']").val(data.phonenumber);
+            StudentForm.find("select[name='TrainingProgramId']").val(data.trainingprogramid);
+            StudentForm.find("select[name='DepartmentId']").val(data.departmentid);
+            StudentForm.find("select[name='MajorId']").val(data.majorid);
+            StudentForm.find("input[name='ClassName']").val(data.classname);
+        }
+
+        StudentFormValidate()
+        function StudentFormValidate(){
+            StudentForm.validate({
+                rules: {
+                    StudentCode:{
+                        required: true,
+                        max: 2000000000
+                    },
+                    Fullname:{
+                        required: true,
+                        maxlength: 100
+                    },
+                    Email:{
+                        required: true,
+                        email: true,
+                        maxlength: 120
+                    },
+                    PhoneNumber: {
+                        required: true,
+                        vietNamPhone: true
+                    },
+                    TrainingProgramId:{
+                        min: 1
+                    },
+                    DepartmentId: {
+                        min: 1
+                    },
+                    MajorId:{
+                        min: 1
+                    },
+                    role:{
+                        min: 0
+                    },
+                    ClassName:{
+                        required: true,
+                        maxlength: 50,
+                    }
+                },
+                messages: {
+                    StudentCode: {
+                        required: "Vui lòng nhập mã sinh viên",
+                        max: "Mã sinh viên không được quá dài"
+                    },
+                    Fullname: {
+                        required: "Vui lòng nhập họ tên",
+                        maxlength: "Họ tên quá dài"
+                    },
+                    Email: {
+                        required: "Vui lòng nhập email",
+                        email: "Email không hợp lệ",
+                        maxlength: "Email quá dài"
+                    },
+                    PhoneNumber: {
+                        required: "Vui lòng nhập số điện thoại"
+                    },
+                    TrainingProgramId: {
+                        min: "Vui lòng chọn chương trình đào tạo"
+                    },
+                    DepartmentId: {
+                        min: "Vui lòng chọn khoa"
+                    },
+                    MajorId: {
+                        min: "Vui lòng chọn ngành học"
+                    },
+                    role: {
+                        min: "Vui lòng chọn vai trò"
+                    },
+                    ClassName: {
+                        required: "Vui lòng nhập tên lớp",
+                        maxlength: "Tên lớp quá dài"
+                    }
+                }
+            })
+        }
+
+        StudentForm.find(".btn_primary.add").click(function() {
+            if (!StudentForm.valid()) {
+                return;
+            }
+
+            if($("#student_list tbody tr").length == 5){
+                StudentForm.find("label#all-error").text("Đã đủ số lượng sinh viên").css("display", "block");
+                return;
+            }
+
+            let isDuplicate = false;
+            const currentVal = StudentForm.find("input[name='StudentCode']").val();
+            $("#student_list").find("input[name='StudentCode']").each(function() {
+                if($(this).val()==currentVal){
+                    $("#StudentCode-error").text("Đã tồn tại sinh viên trên bảng nhóm sinh viên").css("display", "block");
+                    isDuplicate = true;
+                    return false;
+                }
+            });
+
+            if (isDuplicate) {
+                return; // End the whole click handler function
+            }
+
+            const inputRole = StudentForm.find("select[name='role']");
+
+            if(inputRole.val()==0 && $("#student_list tbody tr").length == 4 && !IsExistOfLeaderInTeam()){
+                StudentForm.find("label#all-error").text("chưa có trưởng nhóm").css("display", "block");
+                return;
+            }
+
+            if(inputRole.val()==1 && IsExistOfLeaderInTeam()){
+                StudentForm.find("label#role-error").text("Đã tồn tại trưởng nhóm").css("display", "block");
+                return;
+            }
+
+            StudentForm.find(".error").css("display", "none");
+
+            AddNewStudentToTable();
+        });
+
+        function IsExistOfLeaderInTeam(){
+            return $("#student_list").find("input[name='roleId']").filter(function(){
+                return this.value == "1";
+            }).length > 0;
+        }
+
+        ValidateTopicForm();
+        function ValidateTopicForm (){
+            MainForm.validate({
+                rules: {
+                    Title:{
+                        required: true,
+                        maxlength: 255 
+                    },
+                    Note:{
+                        maxlength: 600
+                    }
+                },
+                messages: {
+                    Title: {
+                        required: "Tên đề tài là trường bắt buộc",
+                        maxlength: "Chiều dài tối đa của tên đề tài là 255 kí tự" 
+                    },
+                    Note: {
+                        maxlength: "Chiều dài tối đa của mô tả là 600 kí tự" 
+                    }
+                }
+            })
+        }
+
+        function CheckRegisterNewTopic (){
+            if(!MainForm.valid()){
+                return;
+            }
+            if ($("#student_list tbody tr").length<1) {
+                $("#student-table-error").text("Số lượng thành viên trong nhóm phải có ít nhất 1 thành viên và 1 trưởng nhóm").css("display", "block");
+                return;
+            }
+            $("#student-table-error").css("display", "none");
+            if (!IsExistOfLeaderInTeam()) {
+                $("#student-table-error").text("Chưa có trưởng nhóm").css("display", "block");
+                return;
+            }
+            $("#student-table-error").css("display", "none");
+        }
+
+        $("#topic_index_modal .save_btn").click(function(){
+            CheckRegisterNewTopic();
+        });
+
+        function AddNewStudentToTable(){
+            const table = MainForm.find("#student_list");
+            const studentCode = StudentForm.find("input[name='StudentCode']");
+            const fullname = StudentForm.find("input[name='Fullname']");
+            const email = StudentForm.find("input[name='Email']");
+            const phonenumber = StudentForm.find("input[name='PhoneNumber']");
+            const classname  = StudentForm.find("input[name='ClassName']");
+            const role = StudentForm.find("select[name='role']");
+            const roleText = role.find("option:selected").text();
+            const trainingProgram = StudentForm.find("select[name='TrainingProgramId']");
+            const department = StudentForm.find("select[name='DepartmentId']");
+            const major = StudentForm.find("select[name='MajorId']");
+
+            const index = $("#student_list tbody tr");
+
+            const newRow = `<tr class="align-bottom">
+                                <td class="pe-1">
+                                            <input class="no_style" readonly name='Students[${index}].StudentCode' type="text" value='${studentCode.val()}' />
+                                </td>
+                                <td class="px-1">
+                                                    <input class="no_style" readonly type="text" name='Students[${index}].FullName' value='${fullname.val()}' />
+                                </td>
+                                <td class="px-1">
+                                                    <input class="no_style" readonly type="text" name='Students[${index}].PhoneNumber' value='${phonenumber.val()}' />
+                                </td>
+                                <td class="px-1">
+                                                    <input class="no_style" readonly type="text" name='Students[${index}].Email' value='${email.val()}' />
+                                </td>
+                                <td class="px-1">
+                                            <input hidden name='Students[${index}].RoleId' type="number" value='${role.val()}' />
+                                            <input class="no_style" readonly name="roleText" type="text" value='${roleText}' />
+                                </td>
+                                <td class="px-1">
+                                                    <input class="no_style" readonly name='Students[${index}].ClassName' type="text" value='${classname.val()}' />
+                                </td>
+                                <td class="ps-1">
+                                    <button tooltip="Xóa" type="button" class="p-0 delete_btn">
+                                        <img src="/images/error.png" height="40" />
+                                    </button>
+                                </td>
+                                        <input name='Students[${index}].TrainingProgramId' type="number" value='${trainingProgram.val()}' hidden />
+                                        <input name='Students[${index}].DepartmentId' type="number" value='${department.val()}' hidden />
+                                        <input name='Students[${index}].MajorId' type="number" value='${major.val()}' hidden />
+                            </tr>`;
+            table.find("tbody").append(newRow);
+
+            studentCode.val("");
+            fullname.val("");
+            email.val("");
+            phonenumber.val("");
+        }
     </script>
 }

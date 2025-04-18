@@ -83,6 +83,30 @@ input.search {
     font-size: 14px;
 }
 
+input[type="text"].no_style,
+input[type="number"].no_style,
+input[type="password"].no_style,
+select .no_style {
+    padding: 0 !important;
+    background-color: unset !important;
+    cursor: pointer !important;
+    min-width: unset !important;
+    border-radius: unset!important;
+}
+
+input[type="text"][disabled].no_style,
+input[type="number"][disabled].no_style,
+input[type="password"][disabled].no_style,
+select[disabled] .no_style,
+input[type="text"][readonly].no_style,
+input[type="number"][readonly].no_style,
+input[type="password"][readonly].no_style,
+select[readonly] .no_style {
+    color: black;
+    cursor: default !important;
+    opacity: 1;
+}
+
 select {
     min-width: 180px;
     max-width: 250px;
@@ -174,7 +198,7 @@ button:active {
     cursor: pointer;
 }
 
-input[disabled], .no-edit{
+input[disabled], input[readonly], .no-edit {
     cursor: not-allowed;
 }
 
@@ -336,7 +360,8 @@ input[type="password"]::-webkit-textfield-decoration-container {
     color: black;
 }
 
-input[disabled], select[disabled], button[disabled]{
+input[disabled], select[disabled], button[disabled],
+input[readonly], select[readonly], button[readonly] {
     cursor: not-allowed;
     opacity: 0.5;
 }

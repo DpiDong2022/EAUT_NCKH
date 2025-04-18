@@ -12,7 +12,7 @@ namespace EAUT_NCKH.Web.Extensions
         public static IServiceCollection AddAppServices(this IServiceCollection services, IConfiguration configuration) {
             string connectionString = configuration.GetValue<string>("ConnectionString:DefaultConnection");
             services.AddDbContext<EntityDataContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseSqlServer(connectionString), ServiceLifetime.Transient);
 
             services.AddScoped<ICommitteeRepository, CommitteeRepository>();
             services.AddScoped<CommitteeService>();

@@ -10,6 +10,18 @@
 //    modalInstance.show();
 //})
 
+function sanitizeInput(value) {
+    // Loại bỏ các ký tự có thể gây nguy hiểm
+    return value
+        .replace(/[<>\/\\'"&=;(){}[\]`$]/g, '')      
+        .replace(/(script|onerror|onload|javascript|alert)/gi, '');
+}
+
+$('input[type="text"], textarea').on('input', function () {
+    let clean = sanitizeInput($(this).val());
+    $(this).val(clean);
+});
+
 $(".modal .modal-body").on("scroll", function () {
     if ($(this).scrollTop() > 0) {
         $(this).closest(".modal-content").find(".modal-header").addClass("shadow-sm");
@@ -24,6 +36,12 @@ $(`input[name='phoneNumber'], input.number`).on("input", function () {
     let onlyNumbers = value.replace(/\D/g, '');
     $(this).val(onlyNumbers);
 })
+
+$('input.only_string').on('input', function () {
+    let value = $(this).val();
+    let onlyLetters = value.replace(/[^A-Za-zÀ-Ỷà-ỷĂăÂâĐđÊêÔôƠơƯưÁáÉéÍíÓóÚúÝýàèìòùỳĂăẰằẮắẴẵẶặÂâẦầẤấẪẫẬậÊêỀềẾếỄễỆệÔôỒồỐốỖỗỘộƠơỜờỚớỠỡỢợƯưỪừỨứỮữỰự\s]/g, '');
+    $(this).val(onlyLetters);
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -81,7 +99,7 @@ $("#changePassword_modal .save_btn").on("click", function () {
     });
 })
 
-const listModalsOpenAfterNotice = ["changePassword_modal", "account_index_modal"];
+const listModalsOpenAfterNotice = ["changePassword_modal", "account_index_modal", "topic_index_modal"];
 $("#error_modal").on("hidden.bs.modal", () => {
     listModalsOpenAfterNotice.forEach((id) => {
         if (id == previusModel) {

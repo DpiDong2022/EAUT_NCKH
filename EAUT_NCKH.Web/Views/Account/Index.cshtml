@@ -639,6 +639,9 @@
                     $(".modal#error_modal").find("#message").text(response.message);
                     $(".modal#error_modal").modal("show");
                 }
+            }).catch((Error) => {
+                $("#page-loader").css("display", "none");
+                console.log(`${Error}`);
             });
         }
 
@@ -685,6 +688,9 @@
                     $(".modal#error_modal").find("#message").text(response.message);
                     $(".modal#error_modal").modal("show");
                 }
+            }).catch((Error) => {
+                $("#page-loader").css("display", "none");
+                console.log(`${Error}`);
             });
         }
 
@@ -729,6 +735,9 @@
                     $(".modal#error_modal").find("#message").text(response.message);
                     $(".modal#error_modal").modal("show");
                 }
+            }).catch((Error) => {
+                $("#page-loader").css("display", "none");
+                console.log(`${Error}`);
             });
         }
 

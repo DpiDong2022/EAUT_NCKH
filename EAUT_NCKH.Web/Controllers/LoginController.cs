@@ -47,32 +47,32 @@ namespace EAUT_NCKH.Web.Controllers {
                 return View(request);
             }
 
-            string rawSql = $"SELECT * FROM account WHERE email = '{request.AccountName}' AND password = '{request.Password}'";
+            //string rawSql = $"SELECT * FROM account WHERE email = '{request.AccountName}' AND password = '{request.Password}'";
 
-            var accounts = await _dbContext.Accounts
-                            .FromSqlRaw(rawSql).Include(c => c.Role)
-                            .ToListAsync();
+            //var accounts = await _dbContext.Accounts
+            //                .FromSqlRaw(rawSql).Include(c => c.Role)
+            //                .ToListAsync();
 
-            if (accounts == null || accounts.Count == 0) {
-                ModelState.AddModelError("AccountName", "Tài khoản hoặc mật khẩu không chính xác");
-                return View(request);
-            }
-
-            //var accounts = await _accountService.GetAll(new AccountRequestOptions(request.AccountName));
-            // if (accounts == null || accounts.Count() == 0) {
-
+            //if (accounts == null || accounts.Count == 0) {
             //    ModelState.AddModelError("AccountName", "Tài khoản hoặc mật khẩu không chính xác");
             //    return View(request);
             //}
 
-            //var account = accounts?.First();
+            var accounts = await _accountService.GetAll(new AccountRequestOptions(request.AccountName));
+            if (accounts == null || accounts.Count() == 0) {
 
-            ////if (BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) {
-            //if (request.Password != account.Password) {
+                ModelState.AddModelError("AccountName", "Tài khoản hoặc mật khẩu không chính xác");
+                return View(request);
+            }
 
-            //        ModelState.AddModelError("AccountName", "Tài khoản hoặc mật khẩu không chính xác");
-            //    return View(request);
-            //}
+            var account = accounts?.First();
+
+            //if (BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) {
+            if (request.Password != account.Password) {
+
+                ModelState.AddModelError("AccountName", "Tài khoản hoặc mật khẩu không chính xác");
+                return View(request);
+            }
 
 
             var accountt = accounts.First();
