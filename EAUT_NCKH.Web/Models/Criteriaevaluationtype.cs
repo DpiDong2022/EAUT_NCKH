@@ -13,5 +13,7 @@ public partial class Criteriaevaluationtype
 
     public DateTime Createddate { get; set; }
 
+    public int? Maxscore { get; set; }
+
     public virtual ICollection<Finalresultevaluation> Finalresultevaluations { get; set; } = new List<Finalresultevaluation>();
 }

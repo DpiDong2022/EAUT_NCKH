@@ -5,17 +5,18 @@
     var index = Model.Pagination.GetStartRow();
     int startYear = 2008;
     int endYear = DateTime.Now.Year;
+    var roleId = ViewBag.roleId;
 }
 
 <div class="p-3 h-100 overflow-auto">
-    <div class="bg-white rounded-4 p-3">
+    <div class="bg-white rounded-4 p-3 shadow-sm">
         <div class="d-flex justify-content-between align-items-end flex-nowrap">
             <h5 class="text-uppercase mb-0">Quản lý Đề tài</h5>
             <div class="d-flex gap-3 flex-nowrap">
             </div>
         </div>
         <hr />
-        <form asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+        <form id="datatable_form" asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
             @Html.AntiForgeryToken()
 
             <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
@@ -23,7 +24,7 @@
                     <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" name="DepartmentId">
                         <option value="-1">-------- Chọn Khoa</option>
                         @foreach (var depart in Model.Departments) {
-                            if (depart.Id == Model.Pagination.DepartmentId) {
+                            if (depart.Id == Model.DepartmentId) {
                                 <option value="@depart.Id" selected>@depart.Name</option>
                             } else {
                                 <option value="@depart.Id">@depart.Name</option>
@@ -33,18 +34,24 @@
                     <select class="form-select rounded-pill text-center" name="Year">
                         <option class="text-center" value="-1">-------- Năm</option>
                         @for (int i = endYear; i >= startYear; i--) {
-                            if (i == Model.Pagination.Year) {
+                            if (i == Model.Year) {
                                 <option selected class="text-center" value="@i">@i</option>
                             } else {
                                 <option class="text-center" value="@i">@i</option>
                             }
                         }
                     </select>
-                    <input type="text" class="search" data-bs-toggle="tooltip" title="Tìm kiếm bằng tên đề tài" autocomplete="off" autofocus value="@Model.Pagination.Search" name="Search" placeholder="Nhập từ khóa tìm kiếm ..." />
-                    <button type="submit" class="btn_primary text-nowrap">Tìm kiếm</button>
+                    <input type="text" class="search" data-bs-toggle="tooltip" title="Tìm kiếm bằng tên đề tài" autocomplete="off" autofocus value="@Model.Search" name="Search" placeholder="Nhập từ khóa tìm kiếm ..." />
+                    <button type="submit" class="btn_primary text-nowrap">
+                        <img src="/icons/search_white_icon.png" width="18" />
+                        Tìm kiếm
+                    </button>
                 </div>
                 <div class="d-flex gap-3 flex-nowrap">
-                    <button data-bs-toggle="modal" data-bs-target="#topic_index_modal" id="btn_add" type="button" class="btn_primary text-nowrap">Đăng ký Đề tài</button>
+                    @if (roleId == (int)RoleEnumId.RESEARCH_ADVISOR) {
+                        <button data-bs-toggle="modal" data-bs-target="#topic_index_modal" id="btn_add" type="button" class="btn_primary text-nowrap">
+                            Đăng ký Đề tài</button>
+                    }
                 </div>
             </div>
 
@@ -53,24 +60,22 @@
                     <select style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill" name="StatusId">
                         <option value="-1">-------- Trạng thái Đề tài</option>
                         @foreach (var topicStatus in Model.TopicStatuses) {
-                            if (topicStatus.Id == Model.Pagination.Status) {
+                            if (topicStatus.Id == Model.Status) {
                                 <option value="@topicStatus.Id" selected>@topicStatus.Name</option>
                             } else {
                                 <option value="@topicStatus.Id">@topicStatus.Name</option>
                             }
                         }
                     </select>
-                    <select class="form-select rounded-pill" name="SubStatusCode">
-                        <option value="-1">-------- Trạng thái phê duyệt</option>
-                        @foreach (var subStatus in Model.Substatuses) {
-                            if (subStatus.Code == Model.Pagination.SubStatus) {
-                                <option value="@subStatus.Code" selected>@subStatus.Name</option>
-                            } else {
-                                <option value="@subStatus.Code">@subStatus.Name</option>
-                            }
-                        }
-                    </select>
                 </div>
+                @if ((roleId == (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) || (roleId == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM)) {
+                    <div class="d-flex gap-3 flex-nowrap">
+                        <button id="btn_export" type="button" class="btn_primary text-nowrap">
+                            <img src="/icons/export_white_icon.png" width="14" />
+                            Xuất danh sách đề tài
+                        </button>
+                    </div>
+                }
             </div>
 
             <div class="page_length d-flex justify-content-between align-items-end flex-nowrap gap-3">
@@ -97,12 +102,10 @@
                         <option value="@Model.Pagination.TotalRow">Tất cả</option>
                     }
                 </select>
-                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: </p>
+                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: @Model.Pagination.TotalRow</p>
             </div>
 
-            <input value="@(Model.Pagination.PageNumber)" name="PageNumber" type="number" hidden />
-
-            <table id="accountTable" class="table table-hover table-responsive table-borderless mb-0">
+            <table id="mainTable" class="table table-hover table-responsive table-borderless mb-0">
                 <thead>
                     <tr class="align-middle">
                         <th>#</th>
@@ -116,22 +119,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var topic in Model.Topics) {
-                        <tr class="align-bottom" data-content="@topic.Id">
-                            <td class="p-2">@(++index)</td>
-                            <td width="360" class="p-2"><a class="link" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a></td>
-                            <td width="230" class="p-2">@topic.CreatedbyNavigation.Fullname</td>
+                    @foreach (var topic in Model.DataList) {
+                        <tr role="button" class="align-bottom" data-content="@topic.EncyptedID">
+                            <td>
+                                @(++index)
+                            </td>
+                            <td width="360" class="p-2 title">
+                                <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@topic.EncyptedID" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a>
+                            </td>
+                            <td width="230" class="p-2 teachername">@topic.CreatedbyNavigation.Fullname</td>
                             <td width="110"class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
                             <td class="p-2 text-center">@topic.StatusNavigation.Name</td>
                             <td class="p-2 text-center">@topic.Defenseassignments?.FirstOrDefault()?.Finalscore</td>
-                            <td data-bs-toggle="tooltip" title="@(topic.Note?.Length > 40 ? @topic.Note : "")" class="p-2">@(topic.Note?.Length > 40 ? @topic.Note.Substring(0, 40) + "..." : @topic.Note)</td>
+                            <td data-bs-toggle="tooltip" title="@(topic.Note?.Length > 40 ? @topic.Note : "")" class="p-2 note">@(topic.Note?.Length > 40 ? @topic.Note.Substring(0, 40) + "..." : @topic.Note)</td>
                             <td class="text-end ">
-                                @if (topic.Status == (int)TopicStatusEnumId.PENDING_REGISTRATION) {
+                                @if (topic.Editabled) {
                                     <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
-                                        <button tooltip="Xóa thông tin đề tài" type="button" class="p-0">
+                                        <button tooltip="Xóa thông tin đề tài" type="button" class="p-0 delete_btn">
                                             <img src="/images/error.png" height="40" />
                                         </button>
-                                        <button tooltip="Cập nhật thông tin" type="button" class="p-0">
+                                        <button tooltip="Cập nhật thông tin" type="button" class="p-0 edit_btn">
                                             <img src="/images/edit.png" height="40" />
                                         </button>
                                     </div>
@@ -141,41 +148,7 @@
                     }
                 </tbody>
             </table>
-            <nav>
-                @{
-                    int totalPage = Model.Pagination.GetTotalPage();
-                    Model.CalculatePagination();
-                }
-                <ul class="pagination">
-                    <li role="button" class="page-item page-first @(Model.Pagination.PageNumber <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="#">&laquo;&laquo;</a>
-                    </li>
-                    <li role="button" class="page-item page-left @(Model.Pagination.PageNumber <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="#">&laquo;</a>
-                    </li>
-
-                    @if (Model.Start > Model.Range - 2) {
-                        <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
-                    }
-
-                    @for (int i = Model.Start; i <= Model.End; i++) {
-                        <li role="button" class="page-item item @(Model.Pagination.PageNumber == i ? "active" : "")">
-                            <a class="page-link" href="#">@i</a>
-                        </li>
-                    }
-
-                    @if (Model.End < totalPage) {
-                        <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
-                    }
-
-                    <li role="button" class="page-item page-right @(Model.Pagination.PageNumber == totalPage ? "disabled" : "")">
-                        <a class="page-link" href="#">&raquo;</a>
-                    </li>
-                    <li role="button" data-number="@totalPage" class="page-item page-last @(Model.Pagination.PageNumber == totalPage ? "disabled" : "")">
-                        <a class="page-link" href="#">&raquo;&raquo;</a>
-                    </li>
-                </ul>
-            </nav>
+            <partial name="_Pagination" model="Model.Pagination" />
         </form>
     </div>
 </div>
@@ -184,26 +157,26 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
         <div class="modal-content rounded-5 h-100">
             <div class="modal-header">
-                <h4 class="modal-title" id="">Đăng ký Đề tài</h4>
+                <h4 class="modal-title" id="">Đăng ký đề tài</h4>
             </div>
             <div class="modal-body">
                 <form id="main_form" class="d-flex flex-column gap-3">
                     @Html.AntiForgeryToken()
-                    <input type="number" name="Id" value="0" hidden />
+                    <input type="text" name="Id" value="0" hidden />
                     <div class="form-group mb-0">
                         <label class="required">Tên đề tài</label>
-                        <input type="text" name="Title" placeholder="Nhập tên đề tài" />
+                        <input type="text" name="Title" autocomplete="on" placeholder="Nhập tên đề tài" />
                     </div>
                     <div class="form-group mb-0">
                         <label class="required">Mô tả</label>
-                        <input type="text" name="Note" placeholder="Nhập mô tả (nếu có)" />
+                        <input type="text" name="Note" autocomplete="on" placeholder="Nhập mô tả (nếu có)" />
                     </div>
                     <div class="row">
                         <div class="col col-12 col-lg-6">
                             <div class="form-group">
                                 <label>Tìm kiếm Giảng viên hướng dẫn thứ 2</label>
-                                <input type="text" name="secondTeacherSearch" placeholder="Nhập email hoặc số điện thoại ..." />
-                                <input type="number" name="secondTeacherid" hidden />
+                                <input type="text" name="secondTeacherSearch" autocomplete="on" placeholder="Nhập email hoặc số điện thoại ..." />
+                                <input type="number" name="SecondTeacherId" hidden />
                                 <span class="error"></span>
                             </div>
                         </div>
@@ -239,7 +212,7 @@
                             <label class="error" for="StudentCode" style="display: none;" id="StudentCode-error"></label>
                         </div>
                         <div class="form-group col col-12 col-lg-3">
-                            <input type="text" class="only_string" placeholder="Nhập Họ và tên" name="Fullname" />
+                            <input type="text" class="only_string not_change" placeholder="Nhập Họ và tên" name="Fullname" />
                         </div>
                         <div class="form-group col col-12 col-lg-3">
                             <input type="text" placeholder="Nhập email" name="Email" />
@@ -250,7 +223,7 @@
                     </div>
                     <div class="row">
                         <div class="form-group col col-12 col-lg-4">
-                            <select class="form-select" name="TrainingProgramId">
+                            <select class="form-select not_change" name="TrainingProgramId">
                                 <option value="-1">---- Chọn Trương trình giảng dạy</option>
                                 @foreach (var tp in Model.Trainingprograms) {
                                     <option value="@tp.Id" data-code="@tp.Code">@tp.Name</option>
@@ -258,7 +231,7 @@
                             </select>
                         </div>
                         <div class="form-group col col-12 col-lg-4">
-                            <select class="form-select" name="DepartmentId">
+                            <select class="form-select not_change" name="DepartmentId">
                                 <option value="-1">---- Chọn Khoa / Viện</option>
                                 @foreach (var depart in Model.Departments) {
                                     <option selected value="@depart.Id">@depart.Name</option>
@@ -266,10 +239,10 @@
                             </select>
                         </div>
                         <div class="form-group col col-12 col-lg-4">
-                            <select class="form-select pe-5" name="MajorId">
+                            <select class="form-select pe-5 not_change" name="MajorId">
                                 <option value="-1">---- Chọn Chuyên ngành</option>
                                 @foreach (var major in Model.Majors) {
-                                    if (major.Departmentid == Model.Pagination.DepartmentId || Model.Pagination.DepartmentId == -1) {
+                                    if (major.Departmentid == Model.DepartmentId || Model.DepartmentId == -1) {
                                         <option data-departId="@major.Departmentid" value="@major.Id" data-code="@major.Code">@major.Name</option>
                                     }
                                 }
@@ -286,19 +259,19 @@
                             <label class="error" for="role" style="display: none;" id="role-error"></label>
                         </div>
                         <div class="form-group col col-12 col-lg-6">
-                            <input type="text" placeholder="Nhập tên lớp" name="ClassName" />
+                            <input class="not_change" type="text" placeholder="Nhập tên lớp" name="ClassName" />
                         </div>
                         <label class="error col col-12 text-center" for="all" style="display: none;" id="all-error"></label>
                     </div>
-                    <div class="d-flex justify-content-center gap-3 mt-2">
+                    <div class="d-flex justify-content-start gap-3 mt-2">
                         <button type="button" class="close_btn new">Làm mới</button>
                         <button type="button" class="btn_primary add">Thêm</button>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="save_btn">Đăng ký</button>
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
             </div>
         </div>
     </div>
@@ -388,10 +361,12 @@
             if(!this.value){
                 StudentForm[0].reset();
                 StudentForm.validate().resetForm();
+                StudentForm.find("input.not_change").prop("readonly", false);
+                StudentForm.find("select.not_change").prop("disabled", false);
                 return;
             }
 
-            if($("#student_list input[name='StudentCode']").val()==this.value){
+            if($("#student_list input[name$='.StudentCode']").val()==this.value){
                 $("#StudentCode-error").text("Đã tồn tại sinh viên trên bảng nhóm sinh viên").css("display", "block");
                 return;
             }
@@ -403,7 +378,7 @@
             $("#page-loader").css("display", "flex");
             $.ajax({
                 url: '@Url.Action("FindSecondTeacher", "Topic")',
-                type: 'POST',
+                type: 'GET',
                 data: {
                     email: input.value
                 }
@@ -412,16 +387,17 @@
                 $("#page-loader").css("display", "none");
                 if(response.code == 1){
                     $(input).closest(".form-group").find(".error").text(response.message);
+                    MainForm.find("input[name='SecondTeacherId']").val(0);
                 }
                 else{
                     $(input).closest(".form-group").find(".error").text("");
                     MainForm.find("input[name='teacherName']").val(response.data.fullname);
-                    MainForm.find("input[name='secondTeacherid']").val(response.data.id);
+                    MainForm.find("input[name='SecondTeacherId']").val(response.data.id);
                 }
             }).
             catch((Error) => {
                     $("#page-loader").css("display", "none");
-                    console.log(`Xảy ra lỗi khi tìm giảng viên ${Error}`);
+                    console.log(Error);
             })
         }
 
@@ -439,8 +415,12 @@
                 if (response.code == 0) {
                     FillStudentForm(response.data);
                     StudentForm.valid();
+                    StudentForm.find("input.not_change").prop("readonly", true);
+                    StudentForm.find("select.not_change").prop("disabled", true);
                 }
                 else{
+                    StudentForm.find("input.not_change").prop("readonly", false);
+                    StudentForm.find("select.not_change").prop("disabled", false);
                     if(response.code == 2){
                         $("#StudentCode-error").css("display", "none");
                         return;
@@ -451,7 +431,7 @@
             }).
                 catch((Error) => {
                     $("#page-loader").css("display", "none");
-                    console.log(`Xảy ra lỗi khi tìm sinh viên ${Error}`);
+                    console.log(Error);
                 })
         }
 
@@ -552,7 +532,7 @@
 
             let isDuplicate = false;
             const currentVal = StudentForm.find("input[name='StudentCode']").val();
-            $("#student_list").find("input[name='StudentCode']").each(function() {
+            $("#student_list").find("input[name$='.StudentCode']").each(function() {
                 if($(this).val()==currentVal){
                     $("#StudentCode-error").text("Đã tồn tại sinh viên trên bảng nhóm sinh viên").css("display", "block");
                     isDuplicate = true;
@@ -582,7 +562,7 @@
         });
 
         function IsExistOfLeaderInTeam(){
-            return $("#student_list").find("input[name='roleId']").filter(function(){
+            return $("#student_list").find("input[name$='.RoleId']").filter(function(){
                 return this.value == "1";
             }).length > 0;
         }
@@ -625,6 +605,81 @@
                 return;
             }
             $("#student-table-error").css("display", "none");
+
+            SubmitNewTopic();
+        }
+
+        function GetStudentList (){
+            let students = [];
+            $("#student_list tbody tr").each(function() {
+                const row = $(this);
+                const student = {
+                    id: 0,
+                    studentCode: row.find("input[name*='.StudentCode']").val(),
+                    fullName: row.find("input[name*='.FullName']").val(),
+                    phoneNumber: row.find("input[name*='.PhoneNumber']").val(),
+                    email: row.find("input[name*='.Email']").val(),
+                    roleId: row.find("input[name*='.RoleId']").val(),
+                    className: row.find("input[name*='.ClassName']").val(),
+                    trainingProgramId: row.find("input[name*='.TrainingProgramId']").val(),
+                    departmentId: row.find("input[name*='.DepartmentId']").val(),
+                    majorId: row.find("input[name*='.MajorId']").val()
+                };
+                students.push(student);
+            });
+            return students;
+        }
+
+        function SubmitNewTopic() {
+            const studentList = GetStudentList();
+            const ID = MainForm.find("input[name='Id']").val();
+            const Title = MainForm.find("input[name='Title']").val();
+            const Note = MainForm.find("input[name='Note']").val();
+            const topic = {
+                id: ID,
+                title: Title,
+                note: Note,
+                secondTeacherId: MainForm.find("input[name='SecondTeacherId']").val() || 0,
+                students: studentList
+            };
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("RegisterNewTopic", "Topic")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(topic)
+            }).then((response) => {
+                $("#page-loader").css("display", "none");
+
+                if(response.code == 0){
+                    $(".modal#success_modal").find("#message").text(response.message);
+                    $(".modal#success_modal").modal("show");
+                    debugger;
+                    if (ID != "0") {
+                        $("#mainTable tbody tr").each(function(){
+                            const row = $(this);
+                            if(row.data("content") != ID){
+                                return;
+                            }
+                            row.find(".title a").text(Title);
+                            row.find(".note").text(Note.length > 40 ? (Note.substring(0, 40) + "...") : Note)
+                                .attr("data-bs-original-title", Note.length > 40 ? Note : "");
+                            return false;
+                        })
+                    }
+                    else{
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
+                }
+                else{
+                    $(".modal#error_modal").find("#message").text(response.message);
+                    $(".modal#error_modal").modal("show");
+                }
+            }).catch((errors) => {
+                $("#page-loader").css("display", "none");
+            })
         }
 
         $("#topic_index_modal .save_btn").click(function(){
@@ -644,43 +699,191 @@
             const department = StudentForm.find("select[name='DepartmentId']");
             const major = StudentForm.find("select[name='MajorId']");
 
-            const index = $("#student_list tbody tr");
+            const newRow = GetStudentMemberHtml(studentCode.val(), fullname.val(), phonenumber.val(), email.val(),
+                role.val(), roleText, classname.val(), trainingProgram.val(), department.val(), major.val());
 
-            const newRow = `<tr class="align-bottom">
-                                <td class="pe-1">
-                                            <input class="no_style" readonly name='Students[${index}].StudentCode' type="text" value='${studentCode.val()}' />
-                                </td>
-                                <td class="px-1">
-                                                    <input class="no_style" readonly type="text" name='Students[${index}].FullName' value='${fullname.val()}' />
-                                </td>
-                                <td class="px-1">
-                                                    <input class="no_style" readonly type="text" name='Students[${index}].PhoneNumber' value='${phonenumber.val()}' />
-                                </td>
-                                <td class="px-1">
-                                                    <input class="no_style" readonly type="text" name='Students[${index}].Email' value='${email.val()}' />
-                                </td>
-                                <td class="px-1">
-                                            <input hidden name='Students[${index}].RoleId' type="number" value='${role.val()}' />
-                                            <input class="no_style" readonly name="roleText" type="text" value='${roleText}' />
-                                </td>
-                                <td class="px-1">
-                                                    <input class="no_style" readonly name='Students[${index}].ClassName' type="text" value='${classname.val()}' />
-                                </td>
-                                <td class="ps-1">
-                                    <button tooltip="Xóa" type="button" class="p-0 delete_btn">
-                                        <img src="/images/error.png" height="40" />
-                                    </button>
-                                </td>
-                                        <input name='Students[${index}].TrainingProgramId' type="number" value='${trainingProgram.val()}' hidden />
-                                        <input name='Students[${index}].DepartmentId' type="number" value='${department.val()}' hidden />
-                                        <input name='Students[${index}].MajorId' type="number" value='${major.val()}' hidden />
-                            </tr>`;
             table.find("tbody").append(newRow);
 
             studentCode.val("");
             fullname.val("");
             email.val("");
             phonenumber.val("");
+             StudentForm.find("input.not_change").prop("readonly", false);
+                StudentForm.find("select.not_change").prop("disabled", false);
+        }
+
+        function GetStudentMemberHtml(studentCode, fullname, phonenumber, email, role, roleText, classname, trainingProgram, department, major) {
+            const index = $("#student_list tbody tr").length;
+
+            return `<tr class="align-bottom">
+                                <td class="pe-1">
+                                    <input class="no_style" readonly name='Students[${index}].StudentCode' type="text" value='${studentCode}' />
+                                </td>
+                                <td class="px-1">
+                                     <input class="no_style" readonly type="text" name='Students[${index}].FullName' value='${fullname}' />
+                                </td>
+                                <td class="px-1">
+                                    <input class="no_style" readonly type="text" name='Students[${index}].PhoneNumber' value='${phonenumber}' />
+                                </td>
+                                <td class="px-1">
+                                     <input class="no_style" readonly type="text" name='Students[${index}].Email' value='${email}' />
+                                </td>
+                                <td class="px-1">
+                                     <input hidden name='Students[${index}].RoleId' type="number" value='${role}' />
+                                     <input class="no_style" readonly name="roleText" type="text" value='${roleText}' />
+                                </td>
+                                <td class="px-1">
+                                     <input class="no_style" readonly name='Students[${index}].ClassName' type="text" value='${classname}' />
+                                </td>
+                                <td class="ps-1">
+                                    <button tooltip="Xóa" type="button" class="p-0 delete_btn">
+                                        <img src="/images/error.png" height="35" />
+                                    </button>
+                                    <input name='Students[${index}].TrainingProgramId' type="number" value='${trainingProgram}' hidden />
+                                    <input name='Students[${index}].DepartmentId' type="number" value='${department}' hidden />
+                                    <input name='Students[${index}].MajorId' type="number" value='${major}' hidden />
+                                </td>
+                            </tr>`;
+        }
+
+        function ShowConfirmModal(message) {
+            return new Promise((resolve) => {
+                const Modal = $("#confirm_modal");
+                const Message = Modal.find("#message");
+
+                Message.text(message);
+                Modal.modal("show");
+
+                Modal.find("#ConfirmBtn").off("click").click(() => {
+                    Modal.modal("hide");
+                    resolve(true);
+                })
+
+                Modal.off("hidden.bs.modal").on("hidden.bs.modal", function(){
+                    resolve(false);
+                })
+            })
+        }
+        
+        $("#mainTable .delete_btn").click(async function() {
+            var self = this;
+            var confirm = await ShowConfirmModal("Bạn có chắc muốn xóa thông tin đề tài này?");
+            if (!confirm) { return; }
+
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("Delete", "Topic")',
+                type: "POST",
+                data: {
+                    id: $(this).closest("tr").data("content")
+                }
+            }).then((response) => {
+                $("#page-loader").css("display", "none");
+                if (response.code == 0) {
+                    self.closest("tr").remove();
+                }else{
+                    $(".modal#error_modal").find("#message").text(response.message)
+                    $(".modal#error_modal").modal("show");
+                }
+            }).catch((errors) => {
+                $("#page-loader").css("display", "none");
+            })
+        })
+
+        $("#mainTable .edit_btn").click(async function() {
+            var self = this;
+
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("GetRegisteredTopic", "Topic")',
+                type: "POST",
+                data: {
+                    id: $(this).closest("tr").data("content")
+                }
+            }).then((response) => {
+                console.log(response);
+                $("#page-loader").css("display", "none");
+                if (response.code == 0) {
+                    SetupEditTopic(response.data);
+                } else {
+                    $(".modal#error_modal").find("#message").text(response.message)
+                    $(".modal#error_modal").modal("show");
+                }
+            }).catch((errors) => {
+                $("#page-loader").css("display", "none");
+            })
+        })
+
+        function resetModal(){
+            const modal = MainForm.closest(".modal");
+            modal.find(".modal-title").text("Đăng ký đề tài");
+            modal.find(".save_btn").text("Đăng ký");
+            modal.find("form").each(function() {
+                this.reset();
+                $(this).validate().resetForm();
+            })
+            $("#student_list tbody tr").remove();
+        }
+
+        $("#datatable_form #btn_add").click(() => {
+            resetModal();
+
+        });
+
+        function SetupEditTopic(data){
+            resetModal();
+            MainForm.closest(".modal").find(".modal-title").text("Chỉnh sửa thông tin đăng ký đề tài");
+            MainForm.closest(".modal").find(".save_btn").text("Cập nhật");
+            MainForm.find("input[name='Id']").val(data.encyptedID);
+            MainForm.find("input[name='Title']").val(data.title);
+            MainForm.find("input[name='Note']").val(data.note);
+            MainForm.find("input[name='secondTeacherSearch']").val(data.secondteacherAccount?.email||"");
+            MainForm.find("input[name='teacherName']").val(data.secondteacherAccount?.fullname||"");
+            MainForm.find("input[name='SecondTeacherId']").val(data.secondteacherAccount?.id||0);
+
+            const table = $("#student_list tbody");
+            Array.from(data.studentList).forEach((topicStudent) => {
+                let row = GetStudentMemberHtml(
+                    topicStudent.studentcode,
+                    topicStudent.studentcodeNavigation.fullname,
+                    topicStudent.studentcodeNavigation.phonenumber,
+                    topicStudent.studentcodeNavigation.email,
+                    topicStudent.role ? 1 : 0,
+                    topicStudent.role == 1 ? "Trưởng nhóm" : "Thành viên",
+                    topicStudent.studentcodeNavigation.classname,
+                    topicStudent.studentcodeNavigation.trainingprogramid,
+                    topicStudent.studentcodeNavigation.departmentid,
+                    topicStudent.studentcodeNavigation.majorid
+                );
+                table.append(row);
+            })
+
+            MainForm.closest(".modal").modal("show");
+        }
+
+        $("#datatable_form #btn_export").click(GetStudentTopicRegisterdList);
+
+        function GetStudentTopicRegisterdList(){
+            $.ajax({
+                url: '@Url.Action("GetRegisterdTopicList", "Topic")',
+                type: "GET",
+                xhrFields: {
+                    responseType: 'blob' // Important for binary data
+                }
+            }).then((response) => {
+                const url = window.URL.createObjectURL(response);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Danh sách sinh viên đăng ký đề tài.docx'; // Set desired file name
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url); // Clean up
+            })
+            .catch((error) => {
+                $(".modal#error_modal").find("#message").text("Hệ thống lỗi, vui lòng thử lại sau");
+                $(".modal#error_modal").modal("show");
+            });
         }
     </script>
 }

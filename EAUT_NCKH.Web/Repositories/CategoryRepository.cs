@@ -13,6 +13,18 @@ namespace EAUT_NCKH.Web.Repositories {
             _context = eautNckhContext;
         }
 
+        public async Task<List<Building>> GetAllBuildings() {
+            return await _context.Buildings.ToListAsync();
+        }
+
+        public async Task<List<Department>> GetAllDepartment(string search = "") {
+            return await _context.Departments.Where(c => string.IsNullOrEmpty(search) || EF.Functions.FreeText(c.Name, search)).ToListAsync();
+        }
+
+        public async Task<List<Room>> GetAllRooms(int buildingId = -1) {
+            return await _context.Rooms.Where(c => buildingId == -1 || c.Buildingid == buildingId).ToListAsync();
+        }
+
         public async Task<List<Department>> GetDepartmentListRoleBase(int userId) {
             var userAccount = await _context.Accounts.FirstOrDefaultAsync(u => u.Id == userId);
             if (userAccount?.Roleid != (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) {
@@ -25,7 +37,7 @@ namespace EAUT_NCKH.Web.Repositories {
 
         public async Task<List<Major>> GetMajorListRoleBase(int userId) {
             var userAccount = await _context.Accounts.FirstOrDefaultAsync(u => u.Id == userId);
-            if (userAccount.Roleid == (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) { 
+            if (userAccount.Roleid == (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) {
                 return await _context.Majors.ToListAsync();
             } else {
                 return await _context.Majors.Where(c => c.Departmentid == userAccount.Departmentid).ToListAsync();
@@ -44,6 +56,12 @@ namespace EAUT_NCKH.Web.Repositories {
 
         public async Task<List<T>> GetValueList() {
             return await _context.Set<T>().ToListAsync();
+        }
+
+        public async Task<List<Criteriaevaluationtype>> GetListOfCriteria() {
+            var list = await _context.Criteriaevaluationtypes
+                .ToListAsync();
+            return list;
         }
     }
 }

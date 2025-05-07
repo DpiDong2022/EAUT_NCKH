@@ -9,11 +9,11 @@ public partial class Topicstudent
 
     public int Topicid { get; set; }
 
-    public int Studentcode { get; set; }
-
-    public bool Role { get; set; }
+    public string Studentcode { get; set; } = null!;
 
     public DateTime Createddate { get; set; }
+
+    public bool Role { get; set; }
 
     public virtual Student StudentcodeNavigation { get; set; } = null!;
 

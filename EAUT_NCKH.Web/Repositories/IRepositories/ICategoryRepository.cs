@@ -6,5 +6,9 @@ namespace EAUT_NCKH.Web.Repositories.IRepositories {
         Task<List<Department>> GetDepartmentListRoleBase(int userId);
         Task<List<Role>> GetRoleListRoleBase(int userId);
         Task<List<Major>> GetMajorListRoleBase(int userId);
+        Task<List<Department>> GetAllDepartment(string search);
+        Task<List<Building>> GetAllBuildings();
+        Task<List<Room>> GetAllRooms(int buildingId);
+        Task<List<Criteriaevaluationtype>> GetListOfCriteria();
     }
 }

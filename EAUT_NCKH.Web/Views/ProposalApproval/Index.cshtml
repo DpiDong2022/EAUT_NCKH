@@ -1,0 +1,238 @@
+﻿@using EAUT_NCKH.Web.Enums
+@model ProposalAssignedIndexViewPage
+@{
+    ViewData["Title"] = "Phê duyệt thuyết minh";
+    var index = Model.Pagination.GetStartRow();
+    int startYear = 2008;
+    int endYear = DateTime.Now.Year;
+    var roleId = ViewBag.roleId;
+
+    var committeeRoles = new[] { "committee" }; // danh sách role committee nếu cần mở rộng
+    var isPNCKH = roleId == (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE;
+}
+
+<div class="p-3 h-100 overflow-auto">
+    <div class="bg-white rounded-4 p-3 shadow-sm">
+        <div class="d-flex justify-content-between align-items-end flex-nowrap">
+            <h5 class="text-uppercase mb-0">Phê duyệt thuyết minh</h5>
+            <div class="d-flex gap-3 flex-nowrap">
+            </div>
+        </div>
+        <hr />
+        <form id="datatable_form" asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+            @Html.AntiForgeryToken()
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" asp-for="DepartmentId">
+                        <option value="-2">-------- Chọn Khoa</option>
+                        @foreach (var depart in Model.Departments) {
+                            if (depart.Id == Model.DepartmentId) {
+                                <option value="@depart.Id" selected>@depart.Name</option>
+                            } else {
+                                <option value="@depart.Id">@depart.Name</option>
+                            }
+                        }
+                    </select>
+                    <select asp-for="StatusId" style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill">
+                        <option value="-1">-------- Trạng thái Đề tài</option>
+                        @foreach (var topicStatus in Model.TopicStatuses) {
+                            if (topicStatus.Id == Model.StatusId) {
+                                <option value="@topicStatus.Id" selected>@topicStatus.Name</option>
+                            } else {
+                                <option value="@topicStatus.Id">@topicStatus.Name</option>
+                            }
+                        }
+                        <option value="0">Khác</option>
+                    </select>
+                    <button type="submit" class="btn_primary text-nowrap">
+                        <img src="/icons/search_white_icon.png" width="18" />
+                        Tìm kiếm
+                    </button>
+                </div>
+                <div class="d-flex gap-3 flex-nowrap">
+                </div>
+            </div>
+
+            <div class="page_length d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <select class="form-select rounded-pill page_len_select" asp-for="Pagination.PageLength">
+                    @if (Model.Pagination.PageLength == 10) {
+                        <option value="10" selected>--- Chiều dài bảng</option>
+                        <option value="10" selected>10</option>
+                    } else {
+                        <option value="10">10</option>
+                    }
+                    @if (Model.Pagination.PageLength == 20) {
+                        <option value="20" selected>20</option>
+                    } else {
+                        <option value="20">20</option>
+                    }
+                    @if (Model.Pagination.PageLength == 50) {
+                        <option value="50" selected>50</option>
+                    } else {
+                        <option value="50">50</option>
+                    }
+                    @if (Model.Pagination.PageLength == Model.Pagination.TotalRow) {
+                        <option value="@Model.Pagination.TotalRow" selected>Tất cả</option>
+                    } else {
+                        <option value="@Model.Pagination.TotalRow">Tất cả</option>
+                    }
+                </select>
+                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: @Model.Pagination.TotalRow</p>
+            </div>
+
+            <table id="mainTable" class="table table-hover table-responsive table-borderless mb-0">
+                <thead>
+                    <tr class="align-middle">
+                        <th width="40">#</th>
+                        <th>Tên Đề tài</th>
+                        <th width="350">Ghi chú</th>
+                        <th class="text-nowrap">Thành viên phê duyệt</th>
+                        <th class="">Thuyết minh</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in Model.DataList) {
+                        <tr role="button" class="align-bottom" data-content="@topic.EncyptedID">
+                            <td>
+                                @(++index)
+                            </td>
+                            <td class="p-2 title">
+                                <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@topic.EncyptedID" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a>
+                            </td>
+                            <td data-bs-toggle="tooltip" title="@(topic.Proposals.First().Note?.Length > 100 ? @topic.Proposals.First().Note : "")" class="p-2 note">@(topic.Proposals.First().Note?.Length > 100 ? @topic.Proposals.First().Note.Substring(0, 100) + "..." : @topic.Proposals.First().Note)</td>
+                            <td class="text-nowrap">@topic.Proposalevaluations.FirstOrDefault(d => d.Type == (int)ProposalEvaluationTypeId.COMMITTEE_EVALUATION)?.Approver.Fullname</td>
+                            <td class=""><a role="button" data-bs-toggle="modal" data-bs-target="#preview_pdf_model" class="link text-nowrap ViewProposalFile">Xem Thuyết minh</a></td>
+                            <td class="text-end">
+                                <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
+
+                                    @* COMMITTEE ROLE *@
+                                    @if (!isPNCKH && topic.Status == (int)TopicStatusEnumId.PROPOSAL_REVIEW_ASSIGNMENT) {
+                                        <button type="button" class="btn btn-outline-primary rounded approval rounded-5 text-nowrap" data-bs-target="#approval_modal" data-bs-toggle="modal">
+                                            Phê duyệt
+                                        </button>
+                                    } else if (!isPNCKH && topic.Status == (int)TopicStatusEnumId.PROPOSAL_APPROVED_BY_FACULTY) {
+                                        <button type="button" class="btn btn-outline-danger rounded cancel_approval rounded-5 text-nowrap">
+                                            Hủy duyệt
+                                        </button>
+                                    } else if (isPNCKH && topic.Status == (int)TopicStatusEnumId.PROPOSAL_APPROVED_BY_FACULTY && topic.Proposalevaluations?.FirstOrDefault()?.Statusid != (int)ProposalStatusId.REJECTED) {
+                                        <button type="button" class="btn btn-outline-primary rounded approval rounded-5 text-nowrap" data-bs-target="#approval_modal" data-bs-toggle="modal">
+                                            Phê duyệt
+                                        </button>
+                                    } else if (isPNCKH && topic.Status == (int)TopicStatusEnumId.PROPOSAL_APPROVED_BY_UNIVERSITY) {
+                                        <button type="button" class="btn btn-outline-danger rounded cancel_approval rounded-5 text-nowrap">
+                                            Hủy duyệt
+                                        </button>
+                                    }
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Pagination" model="Model.Pagination" />
+        </form>
+    </div>
+</div>
+
+<div class="modal fade no_reset" id="approval_modal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content rounded-5">
+            <div class="modal-header">
+                <h4 class="modal-title" id="approvalModalLabel">Phê duyệt thuyết minh</h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-controller="ProposalApproval" asp-action="ApproveProposal" id="approvalForm">
+                    @Html.AntiForgeryToken()
+                    <input hidden name="topicId" type="text" />
+                    <div class="mb-3">
+                        <label for="statusId" class="form-label required">Kết quả phê duyệt</label>
+                        <select name="statusId" id="statusId" class="form-select" required>
+                            <option value="" disabled selected>-- Chọn kết quả phê duyệt --</option>
+                            @foreach (var substatus in Model.Substatuses) {
+                                <option value="@substatus.Id">@substatus.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="feedback" class="form-label feedback-label">Ghi chú / Nhận xét <span class="text-danger fw-light">(Tối đa 2000 ký tự)</span></label>
+                        <textarea name="feedback" id="feedback" class="form-control rounded-3" rows="4" maxlength="2000" placeholder="Nhập ghi chú hoặc lý do phê duyệt..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Đóng</button>
+                <button type="submit" class="save_btn" form="approvalForm">Lưu thông tin</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="preview_pdf_model" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body overflow-y-hidden position-relative">
+                <div class="d-flex justify-content-center">
+                    <iframe src="" style="width: 100%; height: 98vh;" frameborder="0"></iframe>
+                </div>
+            </div>
+            <button type="button" class="close_btn position-absolute" style="right: 29px; bottom: 12px;" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<form asp-controller="ProposalApproval" asp-action="CancelProposalApproval" method="post" name="cancelProposalApproval" hidden>
+    <input name="topicId" type="text" />
+</form>
+
+@section Scripts {
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script type="text/javascript">
+
+        const approvalModal = $("#approval_modal");
+        const approvalForm = approvalModal.find("form");
+
+        $(".ViewProposalFile").click(function() {
+            const topicId = $(this).closest("tr").data("content");
+            var pdfUrl = `@Url.Action("ViewProposal", "ProposalAssignment")?target=${topicId}`;
+
+            var iframe = $("#preview_pdf_model iframe")[0];
+            iframe.src = pdfUrl;
+        })
+
+        approvalForm.on("change", "select", function () {
+
+            const feedback = approvalForm.find("textarea[name='feedback']");
+            const fbLabel = approvalForm.find(".feedback-label");
+            const approvalId = $(this).val();
+
+            if (approvalId == 2 || approvalId == 3) {
+                feedback.prop("required", true);
+                fbLabel.addClass("required");
+            }
+            else {
+                feedback.prop("required", false);
+                fbLabel.removeClass("required");
+            }
+        });
+
+        $("#mainTable").on("click", ".cancel_approval", async function () {
+            const confirm = await ShowConfirmModal("Bạn có chắc muốn hủy duyệt thuyết minh?")
+            if(!confirm){
+                return;
+            }
+
+            const topicId = $(this).closest("tr").data("content");
+            const cancelForm = $("form[name='cancelProposalApproval']");
+            cancelForm.find("input[name='topicId']").val(topicId);
+            cancelForm.trigger("submit");
+        })
+
+        $("#mainTable").on("click", ".approval", async function() { 
+            const topicId = $(this).closest("tr").data("content");
+            approvalForm.find("input[name='topicId']").val(topicId);
+        })
+    </script>
+}

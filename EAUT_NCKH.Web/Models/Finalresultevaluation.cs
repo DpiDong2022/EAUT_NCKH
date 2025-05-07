@@ -19,9 +19,13 @@ public partial class Finalresultevaluation
 
     public DateTime? Updateddate { get; set; }
 
+    public int Topicid { get; set; }
+
     public virtual Account CreatedbyNavigation { get; set; } = null!;
 
     public virtual Criteriaevaluationtype Criteria { get; set; } = null!;
 
     public virtual Finalresult Finalresult { get; set; } = null!;
+
+    public virtual Topic Topic { get; set; } = null!;
 }

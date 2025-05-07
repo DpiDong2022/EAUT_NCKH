@@ -9,10 +9,10 @@ namespace EAUT_NCKH.Web.Extensions {
         }
 
         public void OnException(ExceptionContext context) {
-            var controller = context.RouteData.Values["controller"];
-            var action = context.RouteData.Values["action"];
+            //var controller = context.RouteData.Values["controller"];
+            //var action = context.RouteData.Values["action"];
 
-            _logger.LogError(context.Exception, "Unhandled exception in {Controller}/{Action}", controller, action);
+            //_logger.LogError(context.Exception, "Unhandled exception in {Controller}/{Action}", controller, action);
         }
     }
 }

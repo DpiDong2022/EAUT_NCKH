@@ -1,0 +1,154 @@
+﻿@using EAUT_NCKH.Web.Enums
+@model StudentIndexViewPage
+@{
+    ViewData["Title"] = "Quản lý Thông tin Sinh viên";
+    var index = Model.Pagination.GetStartRow();
+    int startYear = 2008;
+    int endYear = DateTime.Now.Year;
+}
+
+<div class="p-3 h-100 overflow-auto">
+    <div class="bg-white rounded-4 p-3 shadow-sm">
+        <div class="d-flex justify-content-between align-items-end flex-nowrap">
+            <h5 class="text-uppercase mb-0">Quản lý Thông tin Sinh viên</h5>
+            <div class="d-flex gap-3 flex-nowrap">
+            </div>
+        </div>
+        <hr />
+        <form id="main_form" asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+            @Html.AntiForgeryToken()
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select class="form-select rounded-pill text-center" name="TrainingProgramId">
+                        <option class="text-center" value="-1">-------- Chọn hệ đào tạo</option>
+                        @foreach(var tp in Model.Trainingprograms) {
+                            if (Model.TrainingProgramId == tp.Id) {
+                                <option selected value="@tp.Id">@tp.Name</option>
+                            } else {
+                                <option value="@tp.Id">@tp.Name</option>
+                            }
+                        }
+                    </select>
+                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" name="DepartmentId">
+                        <option value="-1">-------- Chọn Khoa</option>
+                        @foreach (var depart in Model.Departments) {
+                            if (depart.Id == Model.DepartmentId) {
+                                <option value="@depart.Id" selected>@depart.Name</option>
+                            } else {
+                                <option value="@depart.Id">@depart.Name</option>
+                            }
+                        }
+                    </select>
+                    <input type="text" class="search" data-bs-toggle="tooltip" title="Tìm kiếm ..." autocomplete="off" autofocus value="@Model.Search" name="Search" placeholder="Nhập từ khóa tìm kiếm ..." />
+                    <button type="submit" class="btn_primary text-nowrap">Tìm kiếm</button>
+                </div>
+                <div class="d-flex gap-3 flex-nowrap">
+                    <button data-bs-toggle="modal" data-bs-target="#topic_index_modal" id="btn_add" type="button" class="btn_primary text-nowrap">Nhập danh sách sinh viên</button>
+                </div>
+            </div>
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3 mb-4">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill" name="MajorId">
+                        <option value="-1">-------- Chọn chuyên ngành</option>
+                        @foreach(var major in Model.Majors) {
+                            if (major.Id == Model.MajorId) {
+                                <option class="@(major.Departmentid == Model.DepartmentId ? "" : "d-none")" 
+                                data-department-id="@major.Departmentid" selected value="@major.Id">@major.Name</option>
+                            } else {
+                                <option class="@(major.Departmentid == Model.DepartmentId ? "" : "d-none")"
+                                data-department-id="@major.Departmentid" value="@major.Id">@major.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="page_length d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <select class="form-select rounded-pill page_len_select" name="PageLength">
+                    @if (Model.Pagination.PageLength == 10) {
+                        <option value="10" selected>--- Chiều dài bảng</option>
+                        <option value="10" selected>10</option>
+                    } else {
+                        <option value="10">10</option>
+                    }
+                    @if (Model.Pagination.PageLength == 20) {
+                        <option value="20" selected>20</option>
+                    } else {
+                        <option value="20">20</option>
+                    }
+                    @if (Model.Pagination.PageLength == 50) {
+                        <option value="50" selected>50</option>
+                    } else {
+                        <option value="50">50</option>
+                    }
+                    @if (Model.Pagination.PageLength == Model.Pagination.TotalRow) {
+                        <option value="@Model.Pagination.TotalRow" selected>Tất cả</option>
+                    } else {
+                        <option value="@Model.Pagination.TotalRow">Tất cả</option>
+                    }
+                </select>
+                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: @Model.Pagination.TotalRow</p>
+            </div>
+
+            <table id="mainTable" class="table table-hover table-responsive table-borderless mb-0">
+                <thead>
+                    <tr class="align-middle">
+                        <th>#</th>
+                        <th>Họ và tên</th>
+                        <th>Mã sinh viên</th>
+                        <th>Chuyên ngành</th>
+                        <th>Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Tên lớp</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model.DataList) {
+                        <tr class="align-bottom" data-content="@student.Id">
+                            <td class="p-2">@(++index)</td>
+                            <td class="p-2">@student.Fullname</td>
+                            <td class="p-2">@student.Id</td>
+                            <td class="p-2">@student.Major.Name</td>
+                            <td class="p-2">@student.Email</td>
+                            <td class="p-2">@student.Phonenumber</td>
+                            <td class="p-2">@student.Classname</td>
+                            <td class="text-end ">
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Pagination" model="Model.Pagination" />
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        const mainForm = $("#main_form");
+        mainForm.find("select[name='DepartmentId']").change(function() {
+            const value = this.value;
+            const majorSelect = mainForm.find("select[name='MajorId']");
+            const options = majorSelect.find("option");
+            if(value == "-1"){
+                options.removeClass("d-none");
+                majorSelect.val(-1);
+            }
+            else{
+                options.each(function() {
+                    let option = $(this);
+                    let departmentId = option.data("department-id");
+                    if (option.val() != "-1" && departmentId != value) {
+                        option.addClass("d-none");
+                    }
+                    else{
+                        option.removeClass("d-none");
+                    }
+                });
+            }
+        });
+    </script>
+}

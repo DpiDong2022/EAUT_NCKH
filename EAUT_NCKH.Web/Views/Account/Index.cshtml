@@ -26,7 +26,7 @@
                     <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" name="RoleId">
                         <option value="0">-------- Chọn role</option>
                         @foreach (var role in roleList) {
-                            if (role.Id == Model.Pagination.RoleId) {
+                            if (role.Id == Model.RoleId) {
                                 <option value="@role.Id" selected>@role.Name</option>
                             } else {
                                 <option value="@role.Id">@role.Name</option>
@@ -36,14 +36,14 @@
                     <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" name="DepartmentId">
                         <option value="0">-------- Chọn Khoa</option>
                         @foreach (var depart in departments) {
-                            if (depart.Id == Model.Pagination.DepartmentId) {
+                            if (depart.Id == Model.DepartmentId) {
                                 <option value="@depart.Id" selected>@depart.Name</option>
                             } else {
                                 <option value="@depart.Id">@depart.Name</option>
                             }
                         }
                     </select>
-                    <input type="text" class="search" value="@(Model.Pagination.Search)" name="Search" autocomplete="off" autofocus data-bs-toggle="tooltip" title="Tìm kiếm bằng họ tên, email, số điện thoại" placeholder="Nhập từ khóa tìm kiếm ..." />
+                    <input type="text" class="search" value="@(Model.Search)" name="Search" autocomplete="off" autofocus data-bs-toggle="tooltip" title="Tìm kiếm bằng họ tên, email, số điện thoại" placeholder="Nhập từ khóa tìm kiếm ..." />
                     <button type="submit" class="btn_primary text-nowrap">Tìm kiếm</button>
                 </div>
                 <div class="d-flex gap-3 flex-nowrap">
@@ -77,8 +77,6 @@
                 </select>
                 <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: @Model.Pagination.TotalRow</p>
             </div>
-            
-            <input value="@(Model.Pagination.PageNumber)" name="PageNumber" type="number" hidden />
 
             <table id="accountTable" class="table table-hover table-responsive table-borderless mb-0">
                 <thead>
@@ -93,7 +91,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var type in Model.Accounts) {
+                    @foreach (var type in Model.DataList) {
                         <tr class="align-middle" data-content="@type.Id" data-roleid="@type.Roleid" >
                             <td class="p-2">@(++index)</td>
                             <td class="p-2">@type.Fullname</td>
@@ -106,41 +104,7 @@
                     }
                 </tbody>
             </table>
-            <nav>
-                @{
-                    int totalPage = Model.Pagination.GetTotalPage();
-                    Model.CalculatePagination();
-                }
-                <ul class="pagination">
-                    <li role="button" class="page-item page-first @(Model.Pagination.PageNumber <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="#">&laquo;&laquo;</a>
-                    </li>
-                    <li role="button" class="page-item page-left @(Model.Pagination.PageNumber <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="#">&laquo;</a>
-                    </li>
-
-                    @if(Model.Start > Model.Range-2){
-                        <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
-                    }
-
-                    @for (int i = Model.Start; i <= Model.End; i++) {
-                        <li role="button" class="page-item item @(Model.Pagination.PageNumber == i ? "active" : "")">
-                            <a class="page-link" href="#">@i</a>
-                        </li>
-                    }
-
-                    @if (Model.End < totalPage) {
-                        <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
-                    }
-
-                    <li role="button" class="page-item page-right @(Model.Pagination.PageNumber == totalPage ? "disabled" : "")">
-                        <a class="page-link" href="#">&raquo;</a>
-                    </li>
-                    <li role="button" data-number="@totalPage" class="page-item page-last @(Model.Pagination.PageNumber == totalPage ? "disabled" : "")">
-                        <a class="page-link" href="#">&raquo;&raquo;</a>
-                    </li>
-                </ul>
-            </nav>
+            <partial name="_Pagination" model="Model.Pagination" />
         </form>
     </div>
 </div>
@@ -219,12 +183,12 @@
                     <div class="row" id="row4">
                         <div class="col col-6 form-group" id="academicTitle_container">
                             <label class="required">Học vị</label>
-                            <select class="form-select" name="academicTitle">
+                            <select class="form-select" name="academicTitleid">
                                 <option value="-1" selected>---- Chọn Học vị</option>
-                                <option value="Thạc sĩ">Thạc sĩ</option>
-                                <option value="Tiến sĩ">Tiến sĩ</option>
-                                <option value="Phó giáo sư">Phó giáo sư</option>
-                                <option value="Giáo sư">Giáo sư</option>
+                                <option value="1">Thạc sĩ</option>
+                                <option value="2">Tiến sĩ</option>
+                                <option value="3">Phó giáo sư</option>
+                                <option value="4">Giáo sư</option>
                             </select>
                         </div>
                     </div>
@@ -497,7 +461,7 @@
                      majorId: {
                         notEqual: "-1"
                      },
-                    academicTitle: {
+                    academicTitleid: {
                         notEqual: "-1"
                     }
                  },
@@ -518,7 +482,7 @@
                     majorId: {
                         notEqual: "Chuyên ngành không được để trống"
                     },
-                    academicTitle: {
+                    academicTitleid: {
                         notEqual: "Học vị không được để trống"
                     }
                  }, 
@@ -588,7 +552,7 @@
             const sdt = form.find("input[name='phoneNumber']");
             const depart = form.find("select[name='departmentId']");
             const major = form.find("select[name='majorId']");
-            const academicTitle = form.find("select[name='academicTitle']");
+            const academicTitleid = form.find("select[name='academicTitleid']");
         }
 
         $(`#${text.accountModalId}`).on("shown.bs.modal", function () {
@@ -661,7 +625,7 @@
                     phoneNumber: form.find("input[name='phoneNumber']").val(),
                     departmentId: form.find("select[name='departmentId']").val(),
                     majorId: form.find("select[name='majorId']").val(),
-                    academicTitle: form.find("select[name='academicTitle']").val()
+                    academicTitleId: form.find("select[name='academicTitleid']").val()
                 },
                 headers:{
                     RequestVerificationToken: token
@@ -807,9 +771,9 @@
             form.find("input[name='id']").val(data.id);
 
             if(data.roleId == 3){
-                form.find("select[name='academicTitle']").attr("disabled", false);
+                form.find("select[name='academicTitleid']").attr("disabled", false);
                 form.find("select[name='majorId']").val(data.majorId ? data.majorId : -1);
-                form.find("select[name='academicTitle']").val(data.academicTitle ? data.academicTitle : -1);
+                form.find("select[name='academicTitleid']").val(data.academicTitleId ? data.academicTitleId : -1);
             }
             else if(data.roleId == 4 ){
                 form.find("input[name='className']").val(data.className);

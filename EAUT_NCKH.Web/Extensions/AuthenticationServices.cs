@@ -42,7 +42,7 @@ namespace EAUT_NCKH.Web.Extensions {
             // Rate limiter
             services.AddRateLimiter(options => {
                 options.AddFixedWindowLimiter("login", otp => {
-                    otp.PermitLimit = 10;
+                    otp.PermitLimit = configuration.GetValue<int>("RateLimit");
                     otp.Window = TimeSpan.FromMinutes(5);
                     otp.QueueLimit = 0;
                 });

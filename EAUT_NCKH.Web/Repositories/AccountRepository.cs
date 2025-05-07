@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using MimeKit.Utils;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace EAUT_NCKH.Web.Repositories
 {
@@ -31,7 +30,7 @@ namespace EAUT_NCKH.Web.Repositories
             return list;
         }
 
-        public async Task<List<Account>>? GetDataTable(AccountDataTableOptions options, int userId) {
+        public async Task<List<Account>>? GetDataTable(AccountIndexViewPage options, int userId) {
 
             options.Search = options.Search.ToLower();
             var senderAccount = _eautNckhContext.Accounts.FirstOrDefault(a => a.Id == userId);
@@ -50,11 +49,11 @@ namespace EAUT_NCKH.Web.Repositories
                 || EF.Functions.FreeText(a.Email, options.Search)
                 || EF.Functions.FreeText(a.Phonenumber, options.Search))
             ).OrderByDescending(c => c.Createddate)
-            .Skip(options.GetStartRow())
-            .Take(options.PageLength)
+            .Skip(options.Pagination.GetStartRow())
+            .Take(options.Pagination.PageLength)
             .ToListAsync();
         }
-        public async Task<double> GetCountDataTable(AccountDataTableOptions options, int userId) {
+        public async Task<double> GetCountDataTable(AccountIndexViewPage options, int userId) {
             var senderAccount = _eautNckhContext.Accounts.FirstOrDefault(a => a.Id == userId);
             if (senderAccount?.Roleid == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM) {
                 options.DepartmentId = senderAccount.Departmentid ?? 0;
@@ -144,19 +143,19 @@ namespace EAUT_NCKH.Web.Repositories
             };
         }
 
-        public async Task<ResponseData> AddOrEditToNCKH(GeneralInformationAccount viewModel) {
+        public async Task<ResponseData<int>> AddOrEditToNCKH(GeneralInformationAccount viewModel) {
             Account account;
             viewModel.email = viewModel.email.ToLower();
             if (viewModel.id > 0) {
                 account = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Id == viewModel.id);
                 if (account == null || account.Id == 0) {
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 1,
                         message = "Tài khoản không tồn tại"
                     };
                 }
                 if (account.Email != viewModel.email && _eautNckhContext.Accounts.Any(c => c.Email == viewModel.email)) {
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 1,
                         message = "Email đã được đăng ký"
                     };
@@ -165,7 +164,7 @@ namespace EAUT_NCKH.Web.Repositories
                 account.Email = viewModel.email;
                 _eautNckhContext.Accounts.Update(account);
                 _eautNckhContext.SaveChanges();
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 0,
                     message = "Cập nhật tài khoản thành công"
                 };
@@ -173,21 +172,21 @@ namespace EAUT_NCKH.Web.Repositories
                 account = null;
                 account = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Phonenumber == viewModel.phoneNumber);
                 if (account != null) {
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 1,
                         message = "Số điện thoại đã được đăng ký"
                     };
                 }
                 account = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Email == viewModel.email);
                 if (account != null) {
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 1,
                         message = "Email đã được đăng ký"
                     };
                 }
                 account = await _eautNckhContext.Accounts.FirstOrDefaultAsync(c => c.Roleid == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM && c.Departmentid == viewModel.departmentId);
                 if (account != null) {
-                    return new ResponseData() {
+                    return new ResponseData<int>() {
                         code = 1,
                         message = $"Khoa / Viện hiện tại đã có tài khoản của Tổ Nghiên cứu Khoa học, số điện thoại của tài khoản là: {account.Phonenumber}"
                     };
@@ -205,7 +204,7 @@ namespace EAUT_NCKH.Web.Repositories
                         _eautNckhContext.SaveChanges();
                         transaction.Commit();
 
-                        return new ResponseData {
+                        return new ResponseData<int> {
                             code = 0,
                             message = "Thêm tài khoản thành công",
                             data = newAcc.Id
@@ -214,7 +213,7 @@ namespace EAUT_NCKH.Web.Repositories
                 } catch (Exception e) {
                     await _eautNckhContext.Database.RollbackTransactionAsync();
                     _logService.LogError(e);
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 1,
                         message = "Lỗi hệ thống, vui lòng liên hệ với Phòng Nghiên cứu Khoa học"
                     };
@@ -223,7 +222,7 @@ namespace EAUT_NCKH.Web.Repositories
             }
         }
 
-        public async Task<ResponseData> AddOrEditTeacher(ResearchAdvisorViewModel viewModel, int createrId) {
+        public async Task<ResponseData<int>> AddOrEditTeacher(ResearchAdvisorViewModel viewModel, int createrId) {
             viewModel.email = viewModel?.email?.ToLower();
             // kiem tra giang vien da ton tai hay chua, so dien thoai, email,
             if (viewModel?.id > 0) {
@@ -232,16 +231,16 @@ namespace EAUT_NCKH.Web.Repositories
             return await AddTeacher(viewModel, createrId);
         }
 
-        private async Task<ResponseData> AddTeacher(ResearchAdvisorViewModel viewModel, int createrId) {
+        private async Task<ResponseData<int>> AddTeacher(ResearchAdvisorViewModel viewModel, int createrId) {
             Account creater = await _eautNckhContext.Accounts.FirstOrDefaultAsync(c => c.Id == createrId);
             if (creater == null) {
-                return new ResponseData() {
+                return new ResponseData<int>() {
                     code = 1,
                     message = "Bạn không có quyền thêm tài khoản"
                 };
             }
             if (creater.Roleid == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM && creater.Departmentid != viewModel.departmentId) {
-                return new ResponseData() {
+                return new ResponseData<int>() {
                     code = 1,
                     message= "Bạn không có quyền thêm tài khoản của khoa / viện khác"
                 };
@@ -250,14 +249,14 @@ namespace EAUT_NCKH.Web.Repositories
             Account currentAccount;
             currentAccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Phonenumber == viewModel.phoneNumber);
             if (currentAccount != null) {
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Số điện thoại đã được đăng ký"
                 };
             }
             currentAccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Email == viewModel.email);
             if (currentAccount != null) {
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Email đã được đăng ký"
                 };
@@ -281,14 +280,14 @@ namespace EAUT_NCKH.Web.Repositories
                     }
                     var teacher = new Teacher() {
                         Accountid = account.Id,
-                        Academictitle = viewModel.academicTitle ?? "",
+                        Academictitleid = viewModel.departmentId ?? 0,
                         Majorid = viewModel.majorId??0,
                     };
                     _eautNckhContext.Teachers.Add(teacher);
                     _eautNckhContext.SaveChanges();
                     transaction.Commit();
 
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 0,
                         message = "Thêm tài khoản thành công",
                         data = account.Id
@@ -297,25 +296,25 @@ namespace EAUT_NCKH.Web.Repositories
             } catch (Exception e) {
                 _eautNckhContext.Database.RollbackTransaction();
                 _logService.LogError(e);
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Lỗi hệ thống, vui lòng liên hệ với Phòng Nghiên cứu Khoa học"
                 };
             }
         }
 
-        private async Task<ResponseData> UpdateTeacher(ResearchAdvisorViewModel viewModel) {
+        private async Task<ResponseData<int>> UpdateTeacher(ResearchAdvisorViewModel viewModel) {
             Account currentAccount;
             currentAccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Id == viewModel.id);
             if (currentAccount == null) {
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Tài khoản không tồn tại"
                 };
             }
 
             if (currentAccount.Email != viewModel.email && _eautNckhContext.Accounts.Any(c => c.Email == viewModel.email)) {
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Email đã được đăng ký"
                 };
@@ -328,31 +327,31 @@ namespace EAUT_NCKH.Web.Repositories
             if (teacher == null) {
                 teacher = new Teacher() {
                     Accountid = currentAccount.Id,
-                    Academictitle = viewModel.academicTitle??"",
+                    Academictitleid = viewModel.academicTitleId ?? 0,
                     Majorid = _eautNckhContext.Majors.First(c => c.Departmentid == currentAccount.Departmentid).Id
                 };
                 _eautNckhContext.Teachers.Add(teacher);
             } else {
-                teacher.Academictitle = viewModel.academicTitle??"";
+                teacher.Academictitleid = viewModel.academicTitleId ?? 0;
                 _eautNckhContext.Teachers.Update(teacher);
             }
             _eautNckhContext.SaveChanges();
-            return new ResponseData {
+            return new ResponseData<int> {
                 code = 0,
                 message = "Cập nhật tài khoản thành công"
             };
         }
 
-        public async Task<ResponseData> AddOrEditStudent(StudentViewModel viewModel, int createrId) {
+        public async Task<ResponseData<int>> AddOrEditStudent(StudentViewModel viewModel, int createrId) {
             Account creater = await _eautNckhContext.Accounts.FirstOrDefaultAsync(c => c.Id == createrId);
             if (creater == null) {
-                return new ResponseData() {
+                return new ResponseData<int>() {
                     code = 1,
                     message = "Bạn không có quyền thêm tài khoản"
                 };
             }
             if (creater.Roleid == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM && creater.Departmentid != viewModel.departmentId) {
-                return new ResponseData() {
+                return new ResponseData<int>() {
                     code = 1,
                     message = "Bạn không có quyền thêm tài khoản của khoa / viện khác"
                 };
@@ -361,14 +360,14 @@ namespace EAUT_NCKH.Web.Repositories
             Account currentAccount;
             currentAccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Phonenumber == viewModel.phoneNumber);
             if (currentAccount != null) {
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Số điện thoại đã được đăng ký"
                 };
             }
             currentAccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Email == viewModel.email);
             if (currentAccount != null) {
-                return new ResponseData {
+                return new ResponseData<int>  {
                     code = 1,
                     message = "Email đã được đăng ký"
                 };
@@ -402,7 +401,7 @@ namespace EAUT_NCKH.Web.Repositories
                     else if (student != null && student.Accountid >0) {
                         _eautNckhContext.Database.RollbackTransaction();
                         var existedAccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(c => c.Id == student.Accountid);
-                        return new ResponseData() { 
+                        return new ResponseData<int>() { 
                             code = 1,
                             message = $"Sinh viên đã có tài khoản, số điện thoại là {existedAccount?.Phonenumber}",
                         };
@@ -410,7 +409,7 @@ namespace EAUT_NCKH.Web.Repositories
                     else {
                         var newStudent = new Student() {
                             Accountid = account.Id,
-                            Id = viewModel.studentCode??0,
+                            Id = viewModel.studentCode,
                             Classname = viewModel.className ?? "",
                             Majorid = viewModel.majorId??0,
                             Trainingprogramid = viewModel.trainingProgram ?? 0,
@@ -420,7 +419,7 @@ namespace EAUT_NCKH.Web.Repositories
                     await _eautNckhContext.SaveChangesAsync();
                     transaction.Commit();
 
-                    return new ResponseData {
+                    return new ResponseData<int> {
                         code = 0,
                         message = "Thêm tài khoản thành công",
                         data = account.Id
@@ -429,22 +428,22 @@ namespace EAUT_NCKH.Web.Repositories
             } catch (Exception e) {
                 _eautNckhContext.Database.RollbackTransaction();
                 _logService.LogError(e);
-                return new ResponseData {
+                return new ResponseData<int> {
                     code = 1,
                     message = "Lỗi hệ thống, vui lòng liên hệ với Phòng Nghiên cứu Khoa học"
                 };
             }
         }
 
-        public async Task<ResponseData> GetAccountInformation(int id) {
+        public async Task<ResponseData<object>> GetAccountInformation(int id) {
             var account = await _eautNckhContext.Accounts.FirstOrDefaultAsync(c => c.Id == id);
             if (account == null) {
-                return new ResponseData() {
+                return new ResponseData<object>() {
                     code = 1,
                     message = "Tài khoản không tồn tại"
                 };
             }
-            object viewModel;
+            GeneralInformationAccount viewModel;
             if (account.Roleid == (int)RoleEnumId.RESEARCH_ADVISOR) {
                 var teacher = await _eautNckhContext.Teachers.FirstOrDefaultAsync(c => c.Accountid == id);
                 viewModel = new ResearchAdvisorViewModel() {
@@ -452,7 +451,7 @@ namespace EAUT_NCKH.Web.Repositories
                     fullName = account.Fullname,
                     email = account.Email,
                     phoneNumber = account.Phonenumber,
-                    academicTitle = teacher?.Academictitle??"",
+                    academicTitleId = teacher?.Academictitleid ?? 0,
                     majorId = teacher?.Majorid == 0 ? -1 : teacher?.Majorid,
                     departmentId = account.Departmentid,
                     roleId = account.Roleid
@@ -484,7 +483,7 @@ namespace EAUT_NCKH.Web.Repositories
                     roleId = account.Roleid
                 };
             }
-            return new ResponseData() {
+            return new ResponseData<object>() {
                 code = 0,
                 data = viewModel
             };
@@ -494,11 +493,11 @@ namespace EAUT_NCKH.Web.Repositories
             return await _eautNckhContext.Accounts.FirstOrDefaultAsync(x => x.Email == email);
         }
 
-        public async Task<ResponseData> CreateOTP(string email) {
+        public async Task<Response> CreateOTP(string email) {
             email = email.ToLower();
             var acccount = await _eautNckhContext.Accounts.FirstOrDefaultAsync(c => c.Email == email);
             if (acccount == null) {
-                return new ResponseData {
+                return new Response {
                     code = 1,
                     message = "Tài khoản không tồn tại"
                 };
@@ -545,28 +544,84 @@ namespace EAUT_NCKH.Web.Repositories
                 await smtp.DisconnectAsync(true);
             });
 
-            return new ResponseData {
+            return new Response {
                 code = 0,
                 message = "Mã OTP đã được gửi"
             };
         }
 
-        public async Task<ResponseData> VarifyOTP(string otp, string email) {
+        public async Task<Response> VarifyOTP(string otp, string email) {
             var account = await _eautNckhContext.Accounts.FirstOrDefaultAsync(a => a.Email == email);
             if (account == null) {
-                return new ResponseData { code = 1, message = "Tài khoản không tồn tại" };
+                return new Response { code = 1, message = "Tài khoản không tồn tại" };
             }
 
             if (account.Otp != otp) {
-                return new ResponseData { code = 1, message = "Mã OTP không đúng" };
+                return new Response { code = 1, message = "Mã OTP không đúng" };
             }
 
             var timeoutOTP = _configuration.GetValue<int>("OTP:Timeout");
             if ((DateTime.Now - account.Otpgeneratedat)?.TotalMinutes > timeoutOTP) {
-                return new ResponseData { code = 2, message = "Mã OTP đã hết hạn" };
+                return new Response { code = 2, message = "Mã OTP đã hết hạn" };
             }
 
-            return new ResponseData { code = 0, message = "Xác thực thành công, mật khẩu mới đã được gửi tới email của bạn" };
+            return new Response { code = 0, message = "Xác thực thành công, mật khẩu mới đã được gửi tới email của bạn" };
+        }
+
+        public async Task<ResponseData<AccountDto>> GetAccountInformationAccount(int id) {
+            var account = await _eautNckhContext.Accounts
+                .Include(c => c.Department)
+                .Include(c => c.Students)
+                .ThenInclude(c => c.Major)
+                .ThenInclude(c => c.Department)
+                .Include(c => c.Teachers)
+                .ThenInclude(c => c.Major)
+                .ThenInclude(c => c.Department)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            var accountDto = new AccountDto() {
+                Id = account.Id,
+                Fullname = account.Fullname,
+                Email = account.Email,
+                Sex = account.Sex,
+                Phonenumber = account.Phonenumber,
+                Avatar = account.Avatar,
+                Roleid = account.Roleid,
+                Role = account.Role,
+                Departmentid = account.Departmentid,
+                Department = account.Department,
+                Students = account.Students,
+                Teachers = account.Teachers
+            };
+            return new ResponseData<AccountDto> { code = 0, data= accountDto };
+        }
+
+        public async Task<ResponseData<List<AccountDto>>> SearchTeacher(string input, int departmentId) {
+            input = input?.Trim();
+            try {
+                if (string.IsNullOrEmpty(input)) {
+                    return new ResponseData<List<AccountDto>>(0, "OK", new List<AccountDto>());
+                }
+                var roleid = (int)RoleEnumId.RESEARCH_ADVISOR;
+                var account = await _eautNckhContext.Accounts
+                    .Include(c => c.Teachers)
+                    .ThenInclude(t => t.Major)
+                    .ThenInclude(m => m.Department)
+                    .Where(c => c.Roleid == roleid
+                        && (departmentId == -1 || c.Departmentid == departmentId )
+                        && (
+                            EF.Functions.FreeText(c.Fullname, input)
+                            || c.Email == input.ToLower()
+                            || EF.Functions.FreeText(c.Phonenumber, input)
+                        )
+                    )
+                .Take(40)
+                .Select(c => new AccountDto(c)).ToListAsync();
+
+                return new ResponseData<List<AccountDto>>(0, "", account);
+            } catch (Exception e) {
+                return new ResponseData<List<AccountDto>>(0, "OK", new List<AccountDto>());
+            }
         }
     }
 }

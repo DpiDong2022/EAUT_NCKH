@@ -15,11 +15,21 @@ public partial class Committee
 
     public DateTime? Updateddate { get; set; }
 
-    public virtual ICollection<Defenseassignment> Defenseassignments { get; set; } = new List<Defenseassignment>();
+    public DateTime? Eventdate { get; set; }
 
-    public virtual ICollection<Finalresult> Finalresults { get; set; } = new List<Finalresult>();
+    public int? Buildingid { get; set; }
 
-    public virtual ICollection<Proposal> Proposals { get; set; } = new List<Proposal>();
+    public int? Roomid { get; set; }
+
+    public int Topicid { get; set; }
+
+    public virtual Building? Building { get; set; }
+
+    public virtual ICollection<Committeemember> Committeemembers { get; set; } = new List<Committeemember>();
+
+    public virtual Room? Room { get; set; }
+
+    public virtual Topic Topic { get; set; } = null!;
 
     public virtual Committeetype Type { get; set; } = null!;
 }

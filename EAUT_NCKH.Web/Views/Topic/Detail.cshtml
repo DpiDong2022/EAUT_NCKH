@@ -1,0 +1,859 @@
+﻿@using EAUT_NCKH.Web.Enums
+@using EAUT_NCKH.Web.Helpers
+@model ResponseData<TopicModelView>
+@{
+    Topic topic = new Topic();
+    ViewData["Title"] = "Chi tiết Đề tài";
+}
+@if (Model.code == 0) {
+    topic = Model.data ?? new Topic();
+} else {
+    <script>
+        alert('@Model.message');
+        history.back();
+    </script>
+}
+
+<style>
+    .committee-table td{
+        font-size: 14px!important;
+    }
+</style>
+
+<div class="p-3 h-100 overflow-auto">
+    <input id="all_topicid" hidden value="@Model.data.EncyptedID" />
+    <div class="d-flex flex-column gap-3">
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 shadow-sm">
+            <button class="btn rounded-3 btn-outline-secondary px-2 shadow-sm" onclick="history.back()">
+                <div class="d-flex justify-content-between gap-1 align-items-center">
+                    <p class="fs-5 mb-0">&larr;</p>
+                    <p class="m-0 text-nowrap">Quay về</p>
+                </div>
+            </button>
+            <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                <h5 class="text-uppercase mb-0 me-md-5 pe-0 pe-md-4 ">Thông tin Đề tài chi tiết</h5>
+            </div>
+        </div>
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+            <div class="">
+                <h6 class="text-uppercase mb-0">Thông tin cơ bản</h6>
+            </div>
+            <hr class="m-0 text-white">
+            <div class="ps-3">
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Tên đề tài:
+                    </div>
+                    <div class="col col-8">
+                        @topic.Title
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Mô tả:
+                    </div>
+                    <div class="col col-8">
+                        @topic.Note
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Ngày đăng ký:
+                    </div>
+                    <div class="col col-8">
+                        @topic.Createddate.ToString("dd/MM/yyyy")
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Giảng viên đăng ký:
+                    </div>
+                    <div class="col col-8">
+                        @topic.CreatedbyNavigation.Fullname
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Khoa / Viện:
+                    </div>
+                    <div class="col col-8">
+                        @topic.Department.Name
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Trạng thái:
+                    </div>
+                    <div class="col col-8">
+                        @topic.StatusNavigation.Name 
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+            <div class="">
+                <h6 class="text-uppercase mb-0">Giảng viên hướng dẫn</h6>
+            </div>
+            <hr class="m-0 text-white">
+            <div class="ps-3 col col-11">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="py-0 pe-3 pb-3 ps-0">Họ và tên</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Email</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Số điện thoại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 pe-3 ps-0">@(topic.CreatedbyNavigation.Teachers.FirstOrDefault().Academictitle.Code).@topic.CreatedbyNavigation.Fullname</td>
+                            <td class="py-2 px-3 ps-0">@topic.CreatedbyNavigation.Email</td>
+                            <td class="py-2 px-3 ps-0">@topic.CreatedbyNavigation.Phonenumber</td>
+                        </tr>
+                        @if (topic.Secondteacher != null) {
+                            <tr>
+                                <td class="py-2 pe-3 ps-0">@(topic.Secondteacher.Teachers.FirstOrDefault().Academictitle.Code).@topic.Secondteacher.Fullname</td>
+                                <td class="py-2 px-3 ps-0">@topic.Secondteacher.Email</td>
+                                <td class="py-2 px-3 ps-0">@topic.Secondteacher.Phonenumber</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+            <div class="">
+                <h6 class="text-uppercase mb-0">Nhóm sinh viên</h6>
+            </div>
+            <hr class="m-0 text-white">
+            <div class="ps-3 col col-11 overflow-y-auto">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="py-0 pe-3 pb-3 ps-0">Họ và tên</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Mã sinh viên</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Email</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Số điện thoại</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Vai trò</th>
+                            <th class="py-0 px-3 pb-3 ps-0">Tên lớp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            topic.Topicstudents = topic.Topicstudents.OrderByDescending(c => c.Role).ToList();
+                        }
+                        @foreach (var stu in topic.Topicstudents) {
+                            <tr>
+                                <td class="py-2 pe-3 ps-0">@stu.StudentcodeNavigation.Fullname</td>
+                                <td class="py-2 px-3 ps-0">@stu.StudentcodeNavigation.Id</td>
+                                <td class="py-2 px-3 ps-0">@stu.StudentcodeNavigation.Email</td>
+                                <td class="py-2 px-3 ps-0">@stu.StudentcodeNavigation.Phonenumber</td>
+                                <td class="py-2 px-3 ps-0">@(stu.Role ? "Trưởng nhóm" : "Thành viên")</td>
+                                <td class="py-2 px-3 ps-0">@stu.StudentcodeNavigation.Classname</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+            <div class="">
+                <h6 class="text-uppercase mb-0">Thông tin Thuyết minh</h6>
+            </div>
+            <hr class="m-0 text-white">
+            <div class="ps-3">
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Hạn nộp thuyết minh:
+                    </div>
+                    <div class="col col-8">
+                        @if (topic.Status > (int)TopicStatusEnumId.PENDING_REGISTRATION) {
+                            @(MyHelper.FormatDateTimeVietnameseString(@topic.Proposals.FirstOrDefault().Submitdeadline))
+                        } else {
+                            <p class="text-white m-0">...</p>
+                        }
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                @if (topic.Status >= (int)TopicStatusEnumId.PROPOSAL_SUBMITTED) {
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            File thuyết minh:
+                        </div>
+                        <div class="col col-8">
+                            <a role="button" id="ViewProposalFile" data-bs-toggle="modal" data-bs-target="#preview_pdf_model" class="link">Xem file</a>
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Ngày nộp thuyết minh:
+                        </div>
+                        <div class="col col-8">
+                            @topic.Proposals.First().Submitdate?.ToString("HH'h'mm dd/MM/yyyy")
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Ngày cập nhật thuyết minh:
+                        </div>
+                        <div class="col col-8">
+                            @if(topic.Proposals.FirstOrDefault().Updateddate != null){
+                                @topic.Proposals.FirstOrDefault().Updateddate?.ToString("HH'h'mm dd/MM/yyyy")
+                            } else {
+                                <p class="text-white m-0">No content</p>
+                            }
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                }
+                @if (topic.Status >= (int)TopicStatusEnumId.WAITING_FOR_PROPOSAL_NOTICE && topic.Status <= (int)TopicStatusEnumId.PROPOSAL_SUBMITTED) {
+                    <div class="row d-flex justify-content-center mt-3">
+                        <button style="width: 180px;" data-bs-toggle="modal" data-bs-target="#submit_proposal_model" id="btn_add" type="button" class="btn_primary text-nowrap col col-2">
+                            @(topic.Proposals.Count>0 && !string.IsNullOrEmpty(topic.Proposals.FirstOrDefault().Filepath) ? "Sửa" : "Nộp") file thuyết minh
+                        </button>
+                    </div>  
+                }
+            </div>
+        </div>
+
+        @if (topic.Status >= (int)TopicStatusEnumId.PROPOSAL_REVIEW_ASSIGNMENT) {
+            <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+                <div class="">
+                    <h6 class="text-uppercase mb-0">Phân công phê duyệt Thuyết minh</h6>
+                </div>
+                <hr class="m-0 text-white">
+                <div class="ps-3">
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thời gian phân công:
+                        </div>
+                        <div class="col col-8">
+                            @MyHelper.GetTimeAgo(@topic.Committees.FirstOrDefault().Createddate)
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Tên Hội đồng:
+                        </div>
+                        <div class="col col-8">
+                            @topic.Committees.FirstOrDefault()?.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    @{
+                        var commmittee = topic.Committees.FirstOrDefault();
+                        var comMembers = commmittee.Committeemembers.OrderBy(c => c.Roleid);
+                    }
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thời gian - Địa điểm:
+                        </div>
+                        <div class="col col-8">
+                            @commmittee.Eventdate?.ToString("dd/MM/yyyy HH:mm") - Tòa @commmittee.Building.Name, phòng @commmittee.Room.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thành viên Hội đồng:
+                        </div>
+                        <div class="col col-8">
+                            <table class="table table-hover committee-table ">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-0">Họ và tên</th>
+                                        <th>Email</th>
+                                        <th>Số điện thoại</th>
+                                        <th>Vai trò</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var member in comMembers) {
+                                        <tr>
+                                            <td class="ps-0">@member.Account.Fullname</td>
+                                            <td>@member.Account.Email</td>
+                                            <td>@member.Account.Phonenumber</td>
+                                            <td>@member.Role.Name</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thông tin phê duyệt:
+                        </div>
+                        <div class="col col-8">
+                            <table class="table table-hover committee-table ">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-0">Phiên</th>
+                                        <th>Trạng thái</th>
+                                        <th>Đánh giá</th>
+                                        <th>Thời gian</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var evaluation in topic.Proposalevaluations) {
+                                        <tr>
+                                            <td class="ps-0 text-nowrap">@(evaluation.Type==(int)ProposalEvaluationTypeId.COMMITTEE_EVALUATION ? "Hội đồng" : "Phòng NCKH")</td>
+                                            <td class="text-nowrap">@evaluation.Status.Name</td>
+                                            <td>@evaluation.Feedback</td>
+                                            <td>@evaluation.Createddate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+            <div class="">
+                <h6 class="text-uppercase mb-0">Phê duyệt Cấp Khoa</h6>
+            </div>
+            <hr class="m-0 text-white">
+            <div class="ps-3">
+                <div class="row">
+                    <div class="col col-3 fw-bold">
+                        Hạn nộp kết quả cuối cùng:
+                    </div>
+                    <div class="col col-8">
+                        @if (topic.Status > (int)TopicStatusEnumId.PROPOSAL_APPROVED_BY_UNIVERSITY) {
+                            @(MyHelper.FormatDateTimeVietnameseString(@topic.Finalresults.FirstOrDefault().Submitdeadline))
+                        } else {
+                            <p class="text-white m-0">...</p>
+                        }
+                        <hr class="m-2 mx-0">
+                    </div>
+                </div>
+                @if (topic.Status >= (int)TopicStatusEnumId.FINAL_SUBMITTED) {
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Kết quả cuối cùng:
+                        </div>
+                        <div class="col col-8">
+                            <a target="_blank" asp-controller="FinalResultAssignment" asp-action="DownloadFinalResult" asp-route-topicId="@Model.data.EncyptedID" role="button" id="DownloadFile" class="link">Tải xuống file kết quả</a>
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Ngày nộp kết quả cuối cùng:
+                        </div>
+                        <div class="col col-8">
+                            @topic.Finalresults.First().Submitdate?.ToString("HH'h'mm dd/MM/yyyy")
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                }
+                @if (topic.Status >= (int)TopicStatusEnumId.FINAL_SUBMITTED) {
+                    var commmittee2 = topic.Committees.FirstOrDefault(c => c.Typeid == (int)CommitteeTypeEnumId.FINAL_COMMITTEE);
+                    var comMembers2 = commmittee2.Committeemembers.OrderBy(c => c.Roleid);
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Tên Hội đồng:
+                        </div>
+                        <div class="col col-8">
+                            @commmittee2.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thời gian - Địa điểm:
+                        </div>
+                        <div class="col col-8">
+                            @commmittee2.Eventdate?.ToString("dd/MM/yyyy HH:mm") - Tòa @commmittee2.Building.Name, phòng @commmittee2.Room.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thành viên Hội đồng:
+                        </div>
+                        <div class="col col-8">
+                            <table class="table table-hover committee-table ">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-0">Họ và tên</th>
+                                        <th>Email</th>
+                                        <th>Số điện thoại</th>
+                                        <th>Vai trò</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var member in comMembers2) {
+                                        <tr>
+                                            <td class="ps-0">@member.Account.Fullname</td>
+                                            <td>@member.Account.Email</td>
+                                            <td>@member.Account.Phonenumber</td>
+                                            <td>@member.Role.Name</td>
+                                            <td>
+                                                @if(topic.Finalresultevaluations.Any(d => d.Createdby == member.Accountid)){
+                                                    <a data-bs-target="#evaluation_modal" data-bs-toggle="modal" data-content="@member.Accountid" class="link view_evaluation">Xem đánh giá</a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                @if (topic.Status >= (int)TopicStatusEnumId.WAITING_FOR_FINAL_NOTICE && topic.Status <= (int)TopicStatusEnumId.FINAL_SUBMITTED) {
+                    <div class="row d-flex justify-content-center mt-3">
+                        <button style="width: 180px;" data-bs-toggle="modal" data-bs-target="#submit_final_model" id="btn_add2" type="button" class="btn_primary text-nowrap col col-2">
+                            @(topic.Finalresults.Count > 0 && !string.IsNullOrEmpty(topic.Finalresults.FirstOrDefault().Filepath) ? "Sửa" : "Nộp") kết quả cuối cùng
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="rounded rounded-4 bg-white p-3 d-flex gap-3 flex-column shadow-sm">
+            <div class="">
+                <h6 class="text-uppercase mb-0">Bảo vệ Cấp Trường</h6>
+            </div>
+            <hr class="m-0 text-white">
+            <div class="ps-3">
+                @if (topic.Status >= (int)TopicStatusEnumId.SELECTED_FOR_UNIVERSITY_DEFENSE) {
+                    var commmittee4 = topic.Committees.FirstOrDefault(c => c.Typeid == (int)CommitteeTypeEnumId.DEFENSE_COMMITTEE);
+                    var comMembers3 = commmittee4.Committeemembers.OrderBy(c => c.Roleid);
+
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Tên Hội đồng:
+                        </div>
+                        <div class="col col-8">
+                            @commmittee4?.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thời gian - Địa điểm:
+                        </div>
+                        <div class="col col-8">
+                            @commmittee4.Eventdate?.ToString("dd/MM/yyyy HH:mm") - Tòa @commmittee4.Building.Name, phòng @commmittee4.Room.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Thành viên Hội đồng:
+                        </div>
+                        <div class="col col-8">
+                            <table class="table table-hover ">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-0">Họ và tên</th>
+                                        <th>Email</th>
+                                        <th>Số điện thoại</th>
+                                        <th>Vai trò</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var member in comMembers3) {
+                                        <tr>
+                                            <td class="ps-0">@member.Account.Fullname</td>
+                                            <td>@member.Account.Email</td>
+                                            <td>@member.Account.Phonenumber</td>
+                                            <td>@member.Role.Name</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                @if (topic.Status == (int)TopicStatusEnumId.COMPLETED) {
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Điểm cuối cùng:
+                        </div>
+                        <div class="col col-8">
+                           @topic.Defenseassignments.FirstOrDefault().Finalscore
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-3 fw-bold">
+                            Hình ảnh minh chứng:
+                        </div>
+                        <div class="col col-8">
+                            <div class="row">
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                            </div>
+                            <div class="row">
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                            </div>
+                            <div class="row">
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                            </div>
+                            <div class="row">
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
+                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewImage_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content rounded-5">
+            <div class="modal-content">
+                <div class="modal-body overflow-y-hidden position-relative text-center">
+                    <img class="vh-100 shadow-sm" src="/images/KetQuas/kq1.jpg" />
+                </div>
+                <button type="button" class="close_btn position-absolute" style="right: 29px; bottom: 12px;" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="preview_pdf_model" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body overflow-y-hidden position-relative">
+                <div class="d-flex justify-content-center">
+                    <iframe src="" style="width: 100%; height: 98vh;" frameborder="0"></iframe>
+                </div>
+            </div>
+            <button type="button" class="close_btn position-absolute" style="right: 29px; bottom: 12px;" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submit_final_model" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-5">
+            <form id="final_form" enctype="multipart/form-data" asp-controller="FinalResultAssignment" method="post" asp-action="SubmitFinal">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Nộp kết quả cuối cùng</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">
+                            Chọn file nén <strong>(*.zip)</strong>, dung lượng tối đa
+                            <span class="text-danger">150MB</span>.<br />
+                            File nén chỉ được phép bao gồm các loại file sau:
+                            <ul class="mb-0 mt-1">
+                                <li><strong>.pdf</strong> – Báo cáo</li>
+                                <li><strong>.ppt, .pptx</strong> – Trình chiếu</li>
+                                <li><strong>.xls, .xlsx</strong> – Phụ lục tính toán</li>
+                                <li><strong>.mp4</strong> – Video demo</li>
+                                <li><strong>.zip</strong> – Nén lồng</li>
+                            </ul>
+                        </label>
+                        <input required class="form-control form-control-lg fs-6" type="file" name="file">
+                        <input required hidden type="text" name="topicId" value="@Model.data.EncyptedID">
+                        <span class="file_error error"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
+                    <button type="reset" class="rounded-5 btn btn-lg btn-outline-success">Làm mới</button>
+                    <button type="submit" role="button" class="save_btn">Nộp file</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submit_proposal_model" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-5">
+            <form id="proposal_form" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Nộp file Thuyết minh</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">
+                            Chọn file Thuyết minh (PDF, tối đa <span class="text-danger">1.3MB</span>)
+                        </label>
+                        <input class="form-control form-control-lg fs-6" type="file" id="formFile" name="file" accept=".pdf">
+                        <span class="file_error error"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Ghi chú</label>
+                        <textarea class="form-control form-control-lg fs-6 rounded-3" name="note" id="note" placeholder="Nhập ghi chú" rows="5">@topic.Proposals.FirstOrDefault()?.Note</textarea>
+                        <div class="d-flex justify-content-between">
+                            <span class="note_error error"></span>
+                            <span id="note_counter" class="counter text-muted small">0/250</span> <!-- thêm dòng này -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
+                    <button type="reset" class="rounded-5 btn btn-lg btn-outline-success" >Làm mới</button>
+                    <button type="submit" role="button" class="save_btn">Nộp file</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade no_reset" id="evaluation_modal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content rounded-5">
+            <div class="modal-header">
+                <h4 class="modal-title" id="approvalModalLabel">Chi tiết Đánh giá đề tài</h4>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div id="text_base" class="p-3 rounded rounded-4 shadow-sm mb-3">
+                        <h5>Ý kiến nhận xét, đánh giá đề tài</h5>
+                        <hr>
+                        <div class="container">
+
+                        </div>
+                    </div>
+                    <div id="score_base" class="p-3 rounded rounded-4 shadow-sm">
+                        <h5>Điểm đánh giá</h5>
+                        <hr>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th class="text-nowrap pe-2">Tiêu chí</th>
+                                    <th class="text-nowrap pe-2">Điểm tối đa</th>
+                                    <th class="text-nowrap text-center">Điểm đánh giá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script type="text/javascript">
+        $("#ViewProposalFile").click(function(){
+            const urlParams = new URLSearchParams(window.location.search);
+            var pdfUrl = `@Url.Action("ViewProposal", "ProposalAssignment")?target=${urlParams.get("target")}`;
+
+        var iframe = $("#preview_pdf_model iframe")[0];
+        iframe.src = pdfUrl;
+        })
+
+        $("#proposal_form input[name='file']").change(function(){
+            checkProposalFile(this.files[0], 1.3, $("#proposal_form .file_error"))
+        })
+
+        $("#proposal_form textarea[name='note']").on("input", function() {
+            const input = $(this);
+            const maxChar = 250;
+            ValidateTextLength(input, maxChar, $("#proposal_form .note_error"), "Ghi chú")
+
+            // Đếm số ký tự
+            const currentLength = input.val().length;
+            $("#note_counter").text(`${currentLength}/${maxChar}`);
+
+            // Đổi màu nếu vượt giới hạn
+            if (currentLength > maxChar) {
+                $("#note_counter").addClass("text-danger").removeClass("text-muted");
+            } else {
+                $("#note_counter").addClass("text-muted").removeClass("text-danger");
+            }
+        })
+
+        $("#proposal_form").on("submit", function(e){
+            e.preventDefault();
+            const file = $("#proposal_form input[name='file']")[0].files[0];
+            const note = $("#proposal_form textarea[name='note']");
+
+            const displayError = $("#proposal_form .file_error");
+            const displayErrorNote = $("#proposal_form .note_error");
+            console.log(note)
+            if (!checkProposalFile(file, 1.3, displayError) || !ValidateTextLength(note, 250, displayErrorNote, "Ghi chú")) {
+                return;
+            }
+            AjaxSubmitProposal(file, note.val());
+        })
+
+        function AjaxSubmitProposal(file, note){
+            $("#page-loader").css("display", "flex");
+            const form = new FormData();
+            form.append("file", file)
+            form.append("note", note)
+
+            const urlParams = new URLSearchParams(window.location.search);
+            form.append("topicId", urlParams.get("target"));
+
+            $.ajax({
+                url: '@Url.Action("SubmitProposal", "ProposalAssignment")',
+                type: "POST"
+                ,data:form,
+                processData: false,
+                contentType: false,
+            }).then((response) => {
+                $("#page-loader").css("display", "none");
+                console.log(response);
+                if(response.code != 0 ){
+                    $(".modal#error_modal").find("#message").text(response.message);
+                    $(".modal#error_modal").modal("show");
+                }
+                else{
+                    $(".modal#success_modal").find("#message").text(response.message);
+                    $(".modal#success_modal").modal("show");
+                    setTimeout(function(){
+                        location.reload();
+                    }, 1500)
+                }
+            }).catch((errors) => {
+                $("#page-loader").css("display", "none");
+            })
+        }
+
+        function ValidateTextLength(input, maxChar, errorPh, name) {
+            if (!input || input.val().length === 0){
+                errorPh.text("");
+                return true;
+            }
+
+            if(input.val().length > maxChar){
+                errorPh.text(`${name} quá dài, tối đa là ${maxChar} kí tự`);
+                return false;
+            }
+            errorPh.text("");
+            return true;
+        }
+        function checkProposalFile(file, maxSizeMB, errorPh){
+            if(!file){
+                errorPh.text("Vui lòng chọn file")
+                return false;
+            }
+            const isPDF = file.type === "application/pdf";
+            if(!isPDF){
+                errorPh.text("Hãy chọn file đúng định dạng")
+                return false;
+            }   
+            else if(file.size > (1024 * 1024 * maxSizeMB)){
+                errorPh.text(`Kích thước file quá lớn (${(file.size / 1024 / 1024).toFixed(2)}MB)`)
+                 return false;
+            }
+            errorPh.text("")
+            return true;
+        }
+
+        $(".view_evaluation").click(function() {
+            const topicId = $("#all_topicid").val();
+            const contentId = $(this).data("content");
+            GetEvaluationItems(topicId, contentId);
+        })
+
+        function GetEvaluationItems(topicId, userId) {
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("GetEvaluationListMember2", "FinalResultApproval")',
+                type: 'GET',
+                data: {
+                    topicId: topicId,
+                    userId: userId
+                },
+            }).then((res) => {
+                $("#page-loader").css("display", "none");
+                console.log(res);
+                if (res.code == 0) {
+                    DisplayEvaluationItem(res.data)
+                }
+            })
+        }
+
+        function DisplayEvaluationItem(evaluationItems) {
+            if (!Array.isArray(evaluationItems)) {
+                console.error("Invalid input: data should be an array.");
+                return;
+            }
+
+            const $commentContainer = $('#evaluation_modal #text_base .container');
+            const $scoreTableBody = $('#evaluation_modal #score_base tbody');
+
+            $commentContainer.empty();
+            $scoreTableBody.empty();
+
+            let totalScore = 0;
+            let index = 1;
+
+            evaluationItems.forEach(item => {
+                const isScore = item.isScore;
+                const value = item.value?.trim() || "";
+                const content = item.content || "";
+                const maxscore = item.maxscore || 0;
+
+                if (isScore) {
+                    const score = parseFloat(value) || 0;
+                    totalScore += score;
+
+                    const row = `
+                        <tr>
+                            <td>${index++}</td>
+                            <td class='border-bottom border-bottom-1'>${content}</td>
+                            <td>${maxscore}</td>
+                            <td class="text-center">${score}</td>
+                        </tr>`;
+                    $scoreTableBody.append(row);
+                } else {
+                    const isEmpty = value === "";
+                    const commentHtml = `
+                        <div class="form-group mb-3">
+                        <label class='fw-bold'>${content}</label>
+                        <div class="form-control bg-light ${isEmpty ? "text-white" : ""}">
+                            ${isEmpty ? "." : value}
+                        </div>
+                        </div>`;
+                    $commentContainer.append(commentHtml);
+                }
+            });
+
+            // Add total row
+            const totalRow = `
+                <tr>
+                    <td></td>
+                    <td class="border-bottom border-bottom-1">Tổng</td>
+                    <td>100</td>
+                    <td class="text-center">${totalScore}</td>
+                </tr>`;
+            $scoreTableBody.append(totalRow);
+
+            // Show the modal
+            $('#evaluation_modal').modal('show');
+        }
+
+    </script>
+}

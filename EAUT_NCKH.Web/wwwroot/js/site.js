@@ -99,7 +99,7 @@ $("#changePassword_modal .save_btn").on("click", function () {
     });
 })
 
-const listModalsOpenAfterNotice = ["changePassword_modal", "account_index_modal", "topic_index_modal"];
+const listModalsOpenAfterNotice = ["changePassword_modal", "account_index_modal", "topic_index_modal", "submit_proposal_model", "committee_assignment_modal"];
 $("#error_modal").on("hidden.bs.modal", () => {
     listModalsOpenAfterNotice.forEach((id) => {
         if (id == previusModel) {
@@ -110,6 +110,7 @@ $("#error_modal").on("hidden.bs.modal", () => {
 })
 $(".modal:not(.no_reset)").on("hidden.bs.modal", function () {
     $(this).find("form").each(function () {
+
         this.reset();
         const form = $(this);
         if (form.data('validator')) {
@@ -226,3 +227,22 @@ $(document).ready(function () {
         return value !== arg;
     }, "not equal error default message");
 })
+
+function ShowConfirmModal(message) {
+    return new Promise((resolve) => {
+        const Modal = $("#confirm_modal");
+        const Message = Modal.find("#message");
+
+        Message.text(message);
+        Modal.modal("show");
+
+        Modal.find("#ConfirmBtn").off("click").click(() => {
+            Modal.modal("hide");
+            resolve(true);
+        })
+
+        Modal.off("hidden.bs.modal").on("hidden.bs.modal", function () {
+            resolve(false);
+        })
+    })
+}

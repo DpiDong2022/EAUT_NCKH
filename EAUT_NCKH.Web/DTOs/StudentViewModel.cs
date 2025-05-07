@@ -3,6 +3,6 @@
         public int? trainingProgram { get; set; }
         public int? majorId { get; set; } = 0;
         public string? className { get; set; }
-        public int? studentCode { get; set; } = 0;
+        public string? studentCode { get; set; }
     }
 }

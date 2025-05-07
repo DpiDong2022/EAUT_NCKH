@@ -1,4 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using System.Text.Encodings.Web
+@using EAUT_NCKH.Web.Enums
+@{
+    var account = ViewBag.account as AccountDto;
+    var d = 1;
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -26,13 +33,46 @@
                 <div class="d-flex justify-content-between align-items-center gap-3 h-100">
                     <a class="link ms-3" href="dang-xuat"></a>
                     <div class="d-flex flex-nowrap align-items-end gap-3 me-4">
-                        <div id="notification_icon" 
-                            class="d-flex rounded-circle border border-warning" 
-                            role="button"
-                            data-bs-toggle="modal"
-                             data-bs-target="#notice_model">
-                            <img class="m-auto" height="25" width="25" src="/images/notification-bell.png" />
-                            <p class="news text-danger">New</p>
+                        <div class="dropdown">
+                            <div id="notification_icon"
+                                 class="d-flex rounded-circle border border-warning dropdown"
+                                 role="button"
+                                 data-len="20"
+                                 data-bs-toggle="dropdown"
+                                 data-bs-auto-close="outside"
+                                 data-bs-target="#notifAlert">
+                                <img class="m-auto" height="25" width="25" src="/images/notification-bell.png" />
+                                <p class="news text-danger">New</p>
+                            </div>
+                            <!-- Danh sách thông báo xổ xuống -->
+                            <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="notificationDropdown" style="width: 400px;">
+                                <li><strong class="dropdown-header px-2">Thông báo</strong></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <div style="max-height:500px;" class="overflow-y-auto" id="noti_container">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-start flex-column" href="#">
+                                        <i class="bi bi-envelope me-2 text-primary"></i>
+                                        <div>
+                                            <div class="fw-bold">Thuyết minh đã được duyệt</div>
+                                            <small>2 phút trước</small>
+                                        </div>
+                                        <p class="text-wrap content mb-0">Hạn nộp thuyết minh cho đề tài "Chuyển đổi số trong Marketing: Nghiên cứu trường hợp một thương hiệu bán lẻ tại Việt Nam" đã được cập nhật. Hạn mới: 23 giờ 00 phút, ngày 06 tháng 05, 2025</p>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-start flex-column" href="#">
+                                        <i class="bi bi-exclamation-circle me-2 text-warning"></i>
+                                        <div>
+                                            <div class="fw-bold">Yêu cầu nộp thuyết minh</div>
+                                            <small>5 giờ trước</small>
+                                        </div>
+                                        <p class="text-wrap content mb-0">Hạn nộp thuyết minh cho đề tài "Chuyển đổi số trong Marketing: Nghiên cứu trường hợp một thương hiệu bán lẻ tại Việt Nam" đã được cập nhật. Hạn mới: 23 giờ 00 phút, ngày 06 tháng 05, 2025</p>
+                                    </a>
+                                </li>
+                                </div>
+                                <li><hr class="dropdown-divider divider2"></li>
+                        <li><strong role="button" id="notification_see_more" class="dropdown-header text-center"><a>Xem thêm</a></strong></li>
+                            </ul>
                         </div>
                         <div id="avt_icon" class="p-2 rounded-circle border border-primary" role="button"
                              data-bs-toggle="modal"
@@ -72,23 +112,54 @@
                                 <label>Họ và tên</label>
                             </div>
                             <div class="col col-7">
-                                <input type="text" />
+                                <input type="text" value="@account?.Fullname" />
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col col-4">
-                                <label>Giới tính</label>
+                        @if (account?.Roleid == (int)RoleEnumId.STUDENT) {
+                            <div class="row">
+                                <div class="col col-4">
+                                    <label>Mã sinh viên</label>
+                                </div>
+                                <div class="col col-7">
+                                    <input type="text" value="@account?.Students?.First()?.Id" />
+                                </div>
                             </div>
-                            <div class="col col-7">
-                                <input type="text" />
+                        }
+                        @if (account?.Roleid != (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) {
+                            <div class="row">
+                                <div class="col col-4">
+                                    <label>Khoa</label>
+                                </div>
+                                <div class="col col-7">
+                                    <input type="text" value="@account?.Department?.Name" />
+                                </div>
                             </div>
-                        </div>
+                        }
+                        @if (account?.Roleid == (int)RoleEnumId.STUDENT) {
+                            <div class="row">
+                                <div class="col col-4">
+                                    <label>Chuyên ngành</label>
+                                </div>
+                                <div class="col col-7">
+                                    <input type="text" value="@account?.Students?.First()?.Major?.Name" />
+                                </div>
+                            </div>
+                        } else if (account?.Roleid == (int)RoleEnumId.RESEARCH_ADVISOR){
+                             <div class="row">
+                                <div class="col col-4">
+                                    <label>Chuyên môn</label>
+                                </div>
+                                <div class="col col-7">
+                                    <input type="text" value="@account?.Teachers?.FirstOrDefault()?.Major.Name" />
+                                </div>
+                            </div>
+                        }
                         <div class="row">
                             <div class="col col-4">
                                 <label>Email</label>
                             </div>
                             <div class="col col-7">
-                                <input type="text" />
+                                <input type="text" value="@account?.Email" />
                             </div>
                         </div>
                         <div class="row">
@@ -96,7 +167,7 @@
                                 <label>Số điện thoại</label>
                             </div>
                             <div class="col col-7">
-                                <input type="text" />
+                                <input type="text" value="@account?.Phonenumber" />
                             </div>
                         </div>
                         <div class="row">
@@ -124,8 +195,8 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-5">
                 <div class="modal-header flex-column pb-2">
-                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
                     <img class="mx-auto" src="/images/error.png" height="70" width="70" />
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
                 </div>
                 <div class="modal-body pt-0">
                     <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
@@ -142,8 +213,8 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-5">
                 <div class="modal-header flex-column pb-2">
-                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
                     <img class="mx-auto" src="/images/success.png" height="70" width="70" />
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
                 </div>
                 <div class="modal-body pt-0">
                     <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
@@ -160,14 +231,33 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-5">
                 <div class="modal-header flex-column pb-2">
-                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
                     <img class="mx-auto" src="/images/warning.png" height="70" width="70" />
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Thông báo</h4>
                 </div>
                 <div class="modal-body pt-0">
                     <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="close_btn mx-auto" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Modal confirm-->
+    <div class="modal fade" id="confirm_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-5">
+                <div class="modal-header flex-column pb-2">
+                    <img class="mx-auto" src="/images/warning.png" height="70" width="70" />
+                    <h4 class="modal-title mx-auto mb-2" id="exampleModalLabel">Xác Nhận</h4>
+                </div>
+                <div class="modal-body pt-0">
+                    <p id="message" class="mx-0 mb-2 text-wrap text-center"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="close_btn ms-auto px-5" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="close_btn me-auto px-4" id="ConfirmBtn">Ok</button>
                 </div>
             </div>
         </div>
@@ -230,7 +320,30 @@
     <script src="/lib/jquery/dist/jquery.min.js" ></script>
     <script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="/js/site.js" asp-append-version="true"></script>
+    <script src="/js/notification.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    @{
+        var code = TempData["code"];
+        if (code != null && int.TryParse(code?.ToString(), out int CODE)) {
+            var message = TempData["message"];
+            if (CODE != 0) {
+                <script>
+                    $(document).ready(function() {
+                        $(".modal#error_modal").find("#message").text("@Html.Raw(JavaScriptEncoder.Default.Encode(message.ToString()))");
+                        $(".modal#error_modal").modal("show");
+                    });
+                </script>
+            } else {
+                <script>
+                    $(document).ready(function() {
+                        $(".modal#success_modal").find("#message").text("@Html.Raw(JavaScriptEncoder.Default.Encode(message.ToString()))");
+                        $(".modal#success_modal").modal("show");
+                    });
+                </script>
+            }
+        }
+    }
 
     <script>
 

@@ -10,13 +10,15 @@ namespace EAUT_NCKH.Web.Services {
         private readonly ICategoryRepository<Department> _departRepository;
         private readonly ICategoryRepository<Topicstatus> _topicStatusRepository;
         private readonly ICategoryRepository<Substatus> _subStatusRepository;
+        private readonly ICategoryRepository<Committeetype> _committeeTypeRepository;
         public CategoryService(
             ICategoryRepository<Trainingprogram> TPRepository,
             ICategoryRepository<Major> majorRepository,
             ICategoryRepository<Role> roleRepository,
             ICategoryRepository<Department> departRepository,
             ICategoryRepository<Topicstatus> topicStatusRepository,
-            ICategoryRepository<Substatus> subStatusRepository
+            ICategoryRepository<Substatus> subStatusRepository,
+            ICategoryRepository<Committeetype> committeeTypeRepository
         ) {
             _TPRepository = TPRepository;
             _majorRepository = majorRepository;
@@ -24,6 +26,7 @@ namespace EAUT_NCKH.Web.Services {
             _departRepository = departRepository;
             _topicStatusRepository = topicStatusRepository;
             _subStatusRepository = subStatusRepository;
+            _committeeTypeRepository = committeeTypeRepository;
         }
 
         public async Task<List<Trainingprogram>> GetTrainingProgramList() {
@@ -60,6 +63,30 @@ namespace EAUT_NCKH.Web.Services {
 
         public async Task<List<Substatus>> GetSubStatusList() {
             return await _subStatusRepository.GetValueList();
+        }
+
+        public async Task<List<Department>> GetAllDepartmentAsync(string search = "") {
+            return await _subStatusRepository.GetAllDepartment(search);
+        }
+
+        public async Task<List<Building>> GetAllBuildings() {
+            return await _subStatusRepository.GetAllBuildings();
+        }
+
+        public async Task<List<Room>> GetAllRooms(int buildingId = -1) {
+            return await _subStatusRepository.GetAllRooms(buildingId);
+        }
+
+        public async Task<List<Substatus>> GetListSubstatuses() {
+            return await _subStatusRepository.GetValueList();
+        }
+
+        public async Task<List<Committeetype>> GetCommitteeTypes() {
+            return await _committeeTypeRepository.GetValueList();
+        }
+
+        public async Task<List<Criteriaevaluationtype>> GetListOfCriteria() {
+            return await _committeeTypeRepository.GetListOfCriteria();
         }
     }
 }

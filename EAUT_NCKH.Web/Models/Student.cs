@@ -5,7 +5,7 @@ namespace EAUT_NCKH.Web.Models;
 
 public partial class Student
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = null!;
 
     public int? Accountid { get; set; }
 
@@ -26,9 +26,10 @@ public partial class Student
     public string Phonenumber { get; set; } = null!;
 
     public int? Departmentid { get; set; }
-    public virtual Department? Department { get; set; }
 
-    public virtual Account? Account { get; set; } = null!;
+    public virtual Account? Account { get; set; }
+
+    public virtual Department? Department { get; set; }
 
     public virtual Major Major { get; set; } = null!;
 

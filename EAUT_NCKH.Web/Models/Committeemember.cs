@@ -13,13 +13,13 @@ public partial class Committeemember
 
     public int Roleid { get; set; }
 
-    public int Displayorder { get; set; }
-
     public DateTime Createddate { get; set; }
 
     public DateTime? Updateddate { get; set; }
 
     public virtual Account Account { get; set; } = null!;
+
+    public virtual Committee Committee { get; set; } = null!;
 
     public virtual Committeerole Role { get; set; } = null!;
 }

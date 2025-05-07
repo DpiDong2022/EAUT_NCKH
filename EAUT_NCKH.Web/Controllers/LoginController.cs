@@ -14,7 +14,7 @@ using System.Security.Claims;
 
 namespace EAUT_NCKH.Web.Controllers {
     [Route("")]
-    [Route("login")]
+    [Route(RouterName.LOGIN)]
     public class LoginController: Controller {
         private readonly AuthService _authService;
         private readonly AccountService _accountService;

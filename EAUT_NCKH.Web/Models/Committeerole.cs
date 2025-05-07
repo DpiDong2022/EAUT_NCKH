@@ -11,5 +11,9 @@ public partial class Committeerole
 
     public int Displayorder { get; set; }
 
+    public int Committeetypeid { get; set; }
+
     public virtual ICollection<Committeemember> Committeemembers { get; set; } = new List<Committeemember>();
+
+    public virtual Committeetype Committeetype { get; set; } = null!;
 }

@@ -12,21 +12,32 @@
             this.message = message;
         }
 
-        public int code { get; set; } = 1;
-        public string message { get; set; }
+        public virtual int code { get; set; } = 1;
+        public virtual string message { get; set; }
     }
-    public class ResponseData : Response {
+    public class ResponseData<T> : Response {
         public ResponseData() : base() {
         }
 
-        public ResponseData(string message, object data = null) : base(message) {
+        public ResponseData(string message, T data) : base(message) {
             this.data = data;
         }
 
-        public ResponseData(int code, string message, object data = null) : base(code, message) {
+        public ResponseData(string message) : base(message) {
+        }
+        public ResponseData(int code, string message) : base(code, message) {
+        }
+
+        public ResponseData(int code, string message, T data) : base(code, message) {
             this.data = data;
         }
 
-        public object data { get; set; } = null!;
+        public T? data { get; set; }
+    }
+
+    public class ResponseOk : Response
+    {
+        public override string message { get; set; } = "OK";
+        public override int code { get; set; } = 0;
     }
 }

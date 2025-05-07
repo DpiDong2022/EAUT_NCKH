@@ -12,7 +12,7 @@ namespace EAUT_NCKH.Web.Extensions
         public static IServiceCollection AddAppServices(this IServiceCollection services, IConfiguration configuration) {
             string connectionString = configuration.GetValue<string>("ConnectionString:DefaultConnection");
             services.AddDbContext<EntityDataContext>(options =>
-            options.UseSqlServer(connectionString), ServiceLifetime.Transient);
+            options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
 
             services.AddScoped<ICommitteeRepository, CommitteeRepository>();
             services.AddScoped<CommitteeService>();
@@ -30,6 +30,28 @@ namespace EAUT_NCKH.Web.Extensions
 
             services.AddScoped<ITopicRepository, TopicRepository>();
             services.AddScoped<TopicService>();
+
+            services.AddScoped<IStudentRepository, StudentRepository>();
+            services.AddScoped<StudentService>();
+
+            services.AddScoped<LayoutFilter>();
+
+            services.AddScoped<ReportService>();
+
+            services.AddScoped<IProposalRepository, ProposalRepository>();
+            services.AddScoped<ProposalService>();
+
+            services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<NotificationService>();
+
+
+            services.AddScoped<IFinalResultRepository, FinalResultRepository>();
+            services.AddScoped<FinalResultService>();
+
+            services.AddScoped<ITopicDefenseRepository, TopicDefenseRepository>();
+            services.AddScoped<TopicDefenseService>();
+
+            services.AddScoped<EmailService>();
             return services;
         }
     }

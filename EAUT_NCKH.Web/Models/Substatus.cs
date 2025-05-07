@@ -15,5 +15,5 @@ public partial class Substatus
 
     public string Code { get; set; } = null!;
 
-    public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
+    public virtual ICollection<Proposalevaluation> Proposalevaluations { get; set; } = new List<Proposalevaluation>();
 }

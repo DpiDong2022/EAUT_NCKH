@@ -7,8 +7,6 @@ public partial class Teacher
 {
     public int Id { get; set; }
 
-    public string Academictitle { get; set; } = null!;
-
     public int Accountid { get; set; }
 
     public DateTime Createddate { get; set; }
@@ -16,6 +14,10 @@ public partial class Teacher
     public DateTime? Updateddate { get; set; }
 
     public int Majorid { get; set; }
+
+    public int Academictitleid { get; set; }
+
+    public virtual Academictitle Academictitle { get; set; } = null!;
 
     public virtual Account Account { get; set; } = null!;
 

@@ -11,7 +11,7 @@ public partial class Building
 
     public int Displayorder { get; set; }
 
-    public virtual ICollection<Proposal> Proposals { get; set; } = new List<Proposal>();
+    public virtual ICollection<Committee> Committees { get; set; } = new List<Committee>();
 
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
 }

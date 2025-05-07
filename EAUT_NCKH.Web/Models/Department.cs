@@ -15,5 +15,7 @@ public partial class Department
 
     public virtual ICollection<Major> Majors { get; set; } = new List<Major>();
 
+    public virtual ICollection<Student> Students { get; set; } = new List<Student>();
+
     public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
 }

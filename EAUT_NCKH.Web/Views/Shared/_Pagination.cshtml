@@ -1,0 +1,37 @@
+﻿@model EAUT_NCKH.Web.DTOs.Options.DataTableOptions
+
+<nav>
+    @{
+        int totalPage = Model.GetTotalPage();
+    }
+    <ul class="pagination">
+        <li role="button" class="page-item page-first @(Model.PageNumber <= 1 ? "disabled" : "")">
+            <a class="page-link" href="#">&laquo;&laquo;</a>
+        </li>
+        <li role="button" class="page-item page-left @(Model.PageNumber <= 1 ? "disabled" : "")">
+            <a class="page-link" href="#">&laquo;</a>
+        </li>
+
+        @if (Model.Start > Model.Range - 2) {
+            <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
+        }
+
+        @for (int i = Model.Start; i <= Model.End; i++) {
+            <li role="button" class="page-item item @(Model.PageNumber == i ? "active" : "")">
+                <a class="page-link" href="#">@i</a>
+            </li>
+        }
+
+        @if (Model.End < totalPage) {
+            <li class="page-item"><span class="page-link h-100 text-black">...</span></li>
+        }
+
+        <li role="button" class="page-item page-right @(Model.PageNumber == totalPage ? "disabled" : "")">
+            <a class="page-link" href="#">&raquo;</a>
+        </li>
+        <li role="button" data-number="@totalPage" class="page-item page-last @(Model.PageNumber == totalPage ? "disabled" : "")">
+            <a class="page-link" href="#">&raquo;&raquo;</a>
+        </li>
+    </ul>
+</nav>
+<input value="@(Model.PageNumber)" name="PageNumber" type="number" hidden />

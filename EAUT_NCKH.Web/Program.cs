@@ -1,6 +1,8 @@
 using EAUT_NCKH.Web.Extensions;
 using EAUT_NCKH.Web.Middlewares;
+using Microsoft.AspNetCore.Http.Features;
 using Serilog;
+using System.Text.Json.Serialization;
 
 namespace EAUT_NCKH.Web {
     public class Program {
@@ -10,24 +12,37 @@ namespace EAUT_NCKH.Web {
             builder.Services.AddAppServices(builder.Configuration);
             builder.Services.AddAuthentication(builder.Configuration);
 
+            // maximum file size
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 150 * 1024 * 1024; // 150 MB
+            });
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.Limits.MaxRequestBodySize = 150 * 1024 * 1024; // 150 MB
+            });
+
             Log.Logger = new LoggerConfiguration()
-            .WriteTo.File(
-                "Logs/log-.txt",
-                rollingInterval: RollingInterval.Day,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}"
-            ).CreateLogger();
+            //.WriteTo.File(
+            //    "Logs/log-.txt",
+            //    rollingInterval: RollingInterval.Day,
+            //    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}")
+            .CreateLogger();
             builder.Host.UseSerilog();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews(options => {
                 options.Filters.Add<LogExceptionFilter>();
             });
+            builder.Services.AddControllers().AddJsonOptions(options => {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment()) {
+            if (app.Environment.IsDevelopment()) {
+                app.UseDeveloperExceptionPage();  // Enable detailed error pages in development
+            } else {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

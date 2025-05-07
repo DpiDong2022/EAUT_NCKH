@@ -1,0 +1,348 @@
+﻿@using EAUT_NCKH.Web.Enums
+@model FinalResultApprovalIndexViewPage
+@{
+    ViewData["Title"] = "Phê duyệt đề tài";
+    var index = Model.Pagination.GetStartRow();
+    int startYear = 2008;
+    int endYear = DateTime.Now.Year;
+    var roleId = ViewBag.roleId;
+
+    var committeeRoles = new[] { "committee" }; // danh sách role committee nếu cần mở rộng
+    var isPNCKH = roleId == (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE;
+}
+
+<div class="p-3 h-100 overflow-auto">
+    <div class="bg-white rounded-4 p-3 shadow-sm">
+        <div class="d-flex justify-content-between align-items-end flex-nowrap">
+            <h5 class="text-uppercase mb-0">Đánh giá đề tài</h5>
+            <div class="d-flex gap-3 flex-nowrap">
+            </div>
+        </div>
+        <hr />
+        <form id="datatable_form" asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+            @Html.AntiForgeryToken()
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" asp-for="DepartmentId">
+                        <option value="-2">-------- Chọn Khoa</option>
+                        @foreach (var depart in Model.Departments) {
+                            if (depart.Id == Model.DepartmentId) {
+                                <option value="@depart.Id" selected>@depart.Name</option>
+                            } else {
+                                <option value="@depart.Id">@depart.Name</option>
+                            }
+                        }
+                    </select>
+                    <select asp-for="StatusId" style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill">
+                        <option value="-1">-------- Trạng thái Đề tài</option>
+                        @foreach (var topicStatus in Model.TopicStatuses) {
+                            if (topicStatus.Id == Model.StatusId) {
+                                <option value="@topicStatus.Id" selected>@topicStatus.Name</option>
+                            } else {
+                                <option value="@topicStatus.Id">@topicStatus.Name</option>
+                            }
+                        }
+                        <option value="0">Khác</option>
+                    </select>
+                    <button type="submit" class="btn_primary text-nowrap">
+                        <img src="/icons/search_white_icon.png" width="18" />
+                        Tìm kiếm
+                    </button>
+                </div>
+                <div class="d-flex gap-3 flex-nowrap">
+                </div>
+            </div>
+
+            <div class="page_length d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <select class="form-select rounded-pill page_len_select" asp-for="Pagination.PageLength">
+                    @if (Model.Pagination.PageLength == 10) {
+                        <option value="10" selected>--- Chiều dài bảng</option>
+                        <option value="10" selected>10</option>
+                    } else {
+                        <option value="10">10</option>
+                    }
+                    @if (Model.Pagination.PageLength == 20) {
+                        <option value="20" selected>20</option>
+                    } else {
+                        <option value="20">20</option>
+                    }
+                    @if (Model.Pagination.PageLength == 50) {
+                        <option value="50" selected>50</option>
+                    } else {
+                        <option value="50">50</option>
+                    }
+                    @if (Model.Pagination.PageLength == Model.Pagination.TotalRow) {
+                        <option value="@Model.Pagination.TotalRow" selected>Tất cả</option>
+                    } else {
+                        <option value="@Model.Pagination.TotalRow">Tất cả</option>
+                    }
+                </select>
+                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: @Model.Pagination.TotalRow</p>
+            </div>
+
+            <table id="mainTable" class="table table-hover table-responsive table-borderless mb-0">
+                <thead>
+                    <tr class="align-middle">
+                        <th width="40">#</th>
+                        <th >Tên đề tài</th>
+                        <th class="">Thuyết minh</th>
+                        <th class="">Kết quả cuối cùng</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in Model.DataList) {
+                        <tr role="button" class="align-bottom" data-content="@topic.EncyptedID">
+                            <td>
+                                @(++index)
+                            </td>
+                            <td class="p-2 title">
+                                <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@topic.EncyptedID" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a>
+                            </td>
+                            <td class=""><a role="button" data-bs-toggle="modal" data-bs-target="#preview_pdf_model" class="link text-nowrap ViewProposalFile">Xem thuyết minh</a></td>
+                            <td class=""><a target="_blank" asp-controller="FinalResultAssignment" asp-action="DownloadFinalResult" asp-route-topicId="@topic.EncyptedID" class="link text-nowrap ViewProposalFile">Tải xuống file kết quả</a></td>
+                            <td class="text-end">
+                                <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
+
+                                    @* COMMITTEE ROLE *@
+                                    @if (!isPNCKH && (topic.Status == (int)TopicStatusEnumId.FINAL_REVIEW_ASSIGNMENT
+                                   || topic.Status == (int)TopicStatusEnumId.FINAL_APPROVED_BY_FACULTY)) {
+                                        var isNew = topic.Finalresultevaluations.Count == 0;
+                                        <button type="button" class="btn btn-outline-primary rounded @(isNew ? "approval" : "update_approval") rounded-5 text-nowrap" data-bs-target="#approval_modal" data-bs-toggle="modal">
+                                            @(isNew ? "Đánh giá" : "Cập nhật đánh giá" )
+                                        </button>
+                                    }
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Pagination" model="Model.Pagination" />
+        </form>
+    </div>
+</div>
+
+<div class="modal fade no_reset" id="approval_modal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content rounded-5">
+            <div class="modal-header">
+                <h4 class="modal-title" id="approvalModalLabel">Đánh giá đề tài</h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-controller="FinalResultApproval" asp-action="FinalResultEvaluate" id="approvalForm">
+                    @Html.AntiForgeryToken()
+                    <input hidden name="topicId" type="text" />
+                    <div class="mb-3">
+                        <div id="text_base" class="p-3 rounded rounded-4 shadow-sm mb-3">
+                            <h5>Ý kiến nhận xét, đánh giá đề tài</h5>
+                            <hr>
+                            @for (int i = 0; i< Model.Criteriaevaluations.Count; i++) {
+                                var cri = Model.Criteriaevaluations[i];
+                                if (cri.Type == false) {
+                                    <div class="form-group">
+                                        <label>@cri.Content</label>
+                                        <input type="number" name="EvaluationItems[@i].Id" hidden value="@cri.Id" />
+                                        <input type="hidden" name="EvaluationItems[@i].IsScore" value="false" />
+                                        <textarea name="EvaluationItems[@i].Value"></textarea>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div id="score_base" class="p-3 rounded rounded-4 shadow-sm">
+                            <h5>Điểm đánh giá</h5>
+                            <hr>
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th class="text-nowrap pe-2">Tiêu chí</th>
+                                        <th class="text-nowrap pe-2">Điểm tối đa</th>
+                                        <th class="text-nowrap text-center">Điểm đánh giá</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var index2 = 1;
+                                    }
+                                    @for (int i = 0; i < Model.Criteriaevaluations.Count; i++) {
+                                        var cri = Model.Criteriaevaluations[i];
+                                        if (cri.Type == true) {
+                                            <tr>
+                                                <td>@(index2++)</td>
+                                                <td class="border-bottom border-bottom-1">@cri.Content</td>
+                                                <td class="text-center">@cri.Maxscore</td>
+                                                <td class="text-center">
+                                                    <input type="number" name="EvaluationItems[@i].Id" hidden value="@cri.Id" />
+                                                    <input type="hidden" name="EvaluationItems[@i].IsScore" value="true" />
+                                                    <input class="border-0 number text-center" max="@cri.Maxscore" name="EvaluationItems[@i].Value" type="number" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    <tr>
+                                        <td></td>
+                                        <td class="border-bottom border-bottom-1">Tổng</td>
+                                        <td class="text-center">100</td>
+                                        <td class="text-center">
+                                            <input readonly class="border-0 number text-center" max="100" name="tong" type="number" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Đóng</button>
+                <button type="submit" class="save_btn" form="approvalForm">Lưu điểm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="preview_pdf_model" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body overflow-y-hidden position-relative">
+                <div class="d-flex justify-content-center">
+                    <iframe src="" style="width: 100%; height: 98vh;" frameborder="0"></iframe>
+                </div>
+            </div>
+            <button type="button" class="close_btn position-absolute" style="right: 29px; bottom: 12px;" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<form asp-controller="ProposalApproval" asp-action="CancelProposalApproval" method="post" name="cancelProposalApproval" hidden>
+    <input name="topicId" type="text" />
+</form>
+
+@section Scripts {
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script type="text/javascript">
+
+        const approvalModal = $("#approval_modal");
+        const approvalForm = approvalModal.find("form");
+
+        $(".ViewProposalFile").click(function() {
+            const topicId = $(this).closest("tr").data("content");
+            var pdfUrl = `@Url.Action("ViewProposal", "ProposalAssignment")?target=${topicId}`;
+
+            var iframe = $("#preview_pdf_model iframe")[0];
+            iframe.src = pdfUrl;
+        })
+
+        approvalForm.on("change", "select", function () {
+
+            const feedback = approvalForm.find("textarea[name='feedback']");
+            const fbLabel = approvalForm.find(".feedback-label");
+            const approvalId = $(this).val();
+
+            if (approvalId == 2 || approvalId == 3) {
+                feedback.prop("required", true);
+                fbLabel.addClass("required");
+            }
+            else {
+                feedback.prop("required", false);
+                fbLabel.removeClass("required");
+            }
+        });
+
+        $("#mainTable").on("click", ".cancel_approval", async function () {
+            const confirm = await ShowConfirmModal("Bạn có chắc muốn hủy duyệt thuyết minh?")
+            if(!confirm){
+                return;
+            }
+
+            const topicId = $(this).closest("tr").data("content");
+            const cancelForm = $("form[name='cancelProposalApproval']");
+            cancelForm.find("input[name='topicId']").val(topicId);
+            cancelForm.trigger("submit");
+        })
+
+        $("#mainTable").on("click", ".approval", async function() {
+            const topicId = $(this).closest("tr").data("content");
+            approvalForm.find("input[name='topicId']").val(topicId);
+        })
+
+        function updateTotalScore() {
+            let sum = 0;
+
+            // Iterate over all visible score input fields except the total ("tong") input
+            $('input[name^="EvaluationItems"][name$=".Value"]').each(function () {
+                const val = parseFloat($(this).val());
+                if (!isNaN(val)) {
+                    sum += val;
+                }
+            });
+
+            // Update the 'tong' input
+            $('input[name="tong"]').val(sum);
+        }
+
+        // Trigger on keyup, change, and input events for live updates
+        $(document).on('input change', 'input[name^="EvaluationItems"][name$=".Value"]', updateTotalScore);
+
+        $("#mainTable .update_approval").click(function() {
+            const topicId = $(this).closest("tr").data("content");
+            $("#approvalForm input[name='topicId']").val(topicId);
+            GetEvaluationItems(topicId);
+        })
+
+        function GetEvaluationItems(topicId){
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("GetEvaluationListMember")',
+                type: 'GET',
+                data: {
+                    topicId: topicId
+                },
+            }).then((res) => {
+                $("#page-loader").css("display", "none");
+                console.log(res);
+                if(res.code == 0){
+                    DisplayEvaluationItem(res.data)
+                }
+            })
+        }
+
+        function DisplayEvaluationItem (evaluationItems){
+                    if (!Array.isArray(evaluationItems)) {
+                console.error("Invalid input: data should be an array.");
+                return;
+            }
+
+            let totalScore = 0;
+
+                    evaluationItems.forEach((item, i) => {
+                const isScore = item.isScore;
+                const value = item.value?.trim() || "";
+
+                // Try to find both input and textarea by name
+                const $input = $(`#approval_modal input[name="EvaluationItems[${i}].Value"]`);
+                const $textarea = $(`#approval_modal textarea[name="EvaluationItems[${i}].Value"]`);
+
+                if (isScore) {
+                    // Score input
+                    if ($input.length > 0) {
+                        const score = parseFloat(value) || 0;
+                        totalScore += score;
+                        $input.val(score);
+                    }
+                } else {
+                    // Comment textarea
+                    if ($textarea.length > 0) {
+                        $textarea.val(value);
+                    }
+                }
+            });
+
+            // Set total score
+            $('#approval_modal input[name="tong"]').val(totalScore);
+        }
+    </script>
+}

@@ -1,12 +1,15 @@
-﻿using EAUT_NCKH.Web.DTOs;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using EAUT_NCKH.Web.DTOs;
+using EAUT_NCKH.Web.DTOs.Options;
 using EAUT_NCKH.Web.Enums;
+using EAUT_NCKH.Web.Extensions;
 using EAUT_NCKH.Web.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EAUT_NCKH.Web.Controllers {
-    [Route("ql-tai-khoan")]
+    [Route(RouterName.QUAN_LY_TAI_KHOAN)]
+    [ServiceFilter(typeof(LayoutFilter))]
     [Authorize(Roles = RoleEnums.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM +","+ RoleEnums.SCIENTIFIC_RESEARCH_OFFICE)]
     public class AccountController : Controller {
 
@@ -30,46 +33,60 @@ namespace EAUT_NCKH.Web.Controllers {
             string role = _authService.GetRoleFromToken(token);
             int userId = _authService.GetAccountIdFromToken(token)??0;
 
-            var paginationOptions = new AccountDataTableOptions(){
-                RoleId = RoleId,
-                DepartmentId = DepartmentId,
-                Search = Search,
-                PageNumber = PageNumber,
-                PageLength = PageLength
-            };
-
+            // get previous filters
             string preSearch = HttpContext.Session.GetString("account_index_search")??"";
             int preRoleSelect = HttpContext.Session.GetInt32("account_index_roleId")??0;
             int preDepartSelect = HttpContext.Session.GetInt32("account_index_departmentId")??0;
-            int prePageLength = HttpContext.Session.GetInt32("account_index_pageLength")??0;
-            if (preSearch != paginationOptions.Search
-                || preRoleSelect != paginationOptions.RoleId
-                || preDepartSelect != paginationOptions.DepartmentId
-                || prePageLength != paginationOptions.PageLength) {
-                paginationOptions.PageNumber = 1;
+            int prePageLength = HttpContext.Session.GetInt32("account_index_pageLength")??10;
+            int prePageNumber = HttpContext.Session.GetInt32("account_index_pageNumber")??1;
+
+            // re-applied filters if its the first request
+            bool isFirstRequest = DepartmentId == 0 && RoleId == 0 && Search == "" && PageNumber == 1 && PageLength == 10;
+            if (isFirstRequest) {
+                DepartmentId = preDepartSelect;
+                RoleId = preRoleSelect;
+                Search = preSearch;
+                PageLength = prePageLength;
+                PageNumber = prePageNumber;
+            }
+            PageLength = prePageLength != PageLength ? PageLength : prePageLength;
+
+            var viewModel = new AccountIndexViewPage(){
+                Pagination = new DataTableOptions{
+                    PageNumber = PageNumber,
+                    PageLength = PageLength
+                },
+                RoleId = RoleId,
+                DepartmentId = DepartmentId,
+                Search = Search,
+            };
+
+            if (preSearch != viewModel.Search
+                || preRoleSelect != viewModel.RoleId
+                || preDepartSelect != viewModel.DepartmentId
+                || prePageLength != viewModel.Pagination.PageLength) {
+                viewModel.Pagination.PageNumber = 1;
             }
 
-            var totalAccounts = await _accountService.GetCountDataTable(paginationOptions, userId);
+            var totalAccounts = await _accountService.GetCountDataTable(viewModel, userId);
 
             if (PageLength == totalAccounts) {
-                paginationOptions.PageNumber = 1;
+                viewModel.Pagination.PageNumber = 1;
             }
-            var accounts = await _accountService.GetDataTable(paginationOptions, userId);
+            var accounts = await _accountService.GetDataTable(viewModel, userId);
             var roles = await _categoryService.GetRoleListRoleBase(userId);
             var departments = await _categoryService.GetDepartmentListRoleBase(userId);
             var trainingPrograms = await _categoryService.GetTrainingProgramList();
             var majors = await _categoryService.GetMajorList();
 
-            HttpContext.Session.SetString("account_index_search", paginationOptions.Search);
-            HttpContext.Session.SetInt32("account_index_roleId", paginationOptions.RoleId);
-            HttpContext.Session.SetInt32("account_index_departmentId", paginationOptions.DepartmentId);
-            HttpContext.Session.SetInt32("account_index_pageLength", paginationOptions.PageLength);
+            viewModel.Pagination.TotalRow = totalAccounts;
+            viewModel.DataList = accounts;
 
-            paginationOptions.TotalRow = totalAccounts;
-            var viewModel = new AccountIndexViewPage(){
-                Pagination = paginationOptions,
-                Accounts = accounts
-            };
+            HttpContext.Session.SetString("account_index_search", viewModel.Search);
+            HttpContext.Session.SetInt32("account_index_roleId", viewModel.RoleId);
+            HttpContext.Session.SetInt32("account_index_departmentId", viewModel.DepartmentId);
+            HttpContext.Session.SetInt32("account_index_pageLength", viewModel.Pagination.PageLength);
+            HttpContext.Session.SetInt32("account_index_pageNumber", viewModel.Pagination.PageNumber);
 
             ViewBag.Roles = roles;
             ViewBag.Departments = departments;
@@ -115,6 +132,12 @@ namespace EAUT_NCKH.Web.Controllers {
         [HttpGet("get-account-information")]
         public async Task<IActionResult> GetAccountInformation(int id) {
             var response = await _accountService.GetAccountInformation(id);
+            return Ok(response);
+        }
+
+        [HttpGet("search-teacher")]
+        public async Task<IActionResult> SearchTeacher(string input, int departmentId) {
+            var response = await _accountService.SearchTeacher(input, departmentId);
             return Ok(response);
         }
     }

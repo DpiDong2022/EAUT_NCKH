@@ -1,0 +1,754 @@
+﻿@using EAUT_NCKH.Web.Enums
+@model TopicIndexViewPage
+@{
+    ViewData["Title"] = "Phân công Hội đồng";
+    var index = Model.Pagination.GetStartRow();
+    int startYear = 2008;
+    int endYear = DateTime.Now.Year;
+    var roleId = ViewBag.roleId;
+    var allDepartments = ViewBag.AllDepartments as List<Department>;
+}
+
+<link href="~/css/proposal_assignment.css" rel="stylesheet" />
+
+<div class="p-3 h-100 overflow-auto">
+    <div class="bg-white rounded-4 p-3 shadow-sm">
+        <div class="d-flex justify-content-between align-items-end flex-nowrap">
+            <h5 class="text-uppercase mb-0">Phân công Hội đồng phê duyệt thuyết minh</h5>
+            <div class="d-flex gap-3 flex-nowrap">
+            </div>
+        </div>
+        <hr />
+        <form id="datatable_form" asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+            @Html.AntiForgeryToken()
+
+            <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <div class="d-flex gap-3 flex-nowrap">
+                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" name="DepartmentId">
+                        <option value="-1">-------- Chọn Khoa</option>
+                        @foreach (var depart in Model.Departments) {
+                            if (depart.Id == Model.DepartmentId) {
+                                <option value="@depart.Id" selected>@depart.Name</option>
+                            } else {
+                                <option value="@depart.Id">@depart.Name</option>
+                            }
+                        }
+                    </select>
+                    <select style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill" name="StatusId">
+                        <option value="-1">-------- Trạng thái Đề tài</option>
+                        @foreach (var topicStatus in Model.TopicStatuses) {
+                            if (topicStatus.Id == Model.Status) {
+                                <option value="@topicStatus.Id" selected>@topicStatus.Name</option>
+                            } else {
+                                <option value="@topicStatus.Id">@topicStatus.Name</option>
+                            }
+                        }
+                    </select>
+                    <select class="form-select rounded-pill text-center" name="Year">
+                        <option class="text-center" value="-1">-------- Năm</option>
+                        @for (int i = endYear; i >= startYear; i--) {
+                            if (i == Model.Year) {
+                                <option selected class="text-center" value="@i">@i</option>
+                            } else {
+                                <option class="text-center" value="@i">@i</option>
+                            }
+                        }
+                    </select>
+                    <button type="submit" class="btn_primary text-nowrap">
+                        <img src="/icons/search_white_icon.png" width="18" />
+                        Tìm kiếm
+                    </button>
+                </div>
+                <div class="d-flex gap-3 flex-nowrap">
+                    @if (roleId == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM) {
+                        <button disabled data-bs-toggle="modal" data-bs-target="#request_proposal_model" id="btn_sendnotice" type="button" class="btn_primary text-nowrap ms-auto">Thông báo nộp thuyết minh</button>
+                    }
+                </div>
+            </div>
+
+            @* <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3 mb-4">
+                @if (roleId == (int)RoleEnumId.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM) {
+                    <button disabled data-bs-toggle="modal" data-bs-target="#request_proposal_model" id="btn_sendnotice" type="button" class="btn_primary text-nowrap ms-auto">Thông báo nộp thuyết minh</button>
+                }
+            </div> *@
+
+            <div class="page_length d-flex justify-content-between align-items-end flex-nowrap gap-3">
+                <select class="form-select rounded-pill page_len_select" name="PageLength">
+                    @if (Model.Pagination.PageLength == 10) {
+                        <option value="10" selected>--- Chiều dài bảng</option>
+                        <option value="10" selected>10</option>
+                    } else {
+                        <option value="10">10</option>
+                    }
+                    @if (Model.Pagination.PageLength == 20) {
+                        <option value="20" selected>20</option>
+                    } else {
+                        <option value="20">20</option>
+                    }
+                    @if (Model.Pagination.PageLength == 50) {
+                        <option value="50" selected>50</option>
+                    } else {
+                        <option value="50">50</option>
+                    }
+                    @if (Model.Pagination.PageLength == Model.Pagination.TotalRow) {
+                        <option value="@Model.Pagination.TotalRow" selected>Tất cả</option>
+                    } else {
+                        <option value="@Model.Pagination.TotalRow">Tất cả</option>
+                    }
+                </select>
+                <p class="me-auto mt-auto mb-0 text-success">Kết quả tìm kiếm: @Model.Pagination.TotalRow</p>
+            </div>
+
+            <table id="mainTable" class="table table-hover table-responsive table-borderless mb-0">
+                <thead>
+                    <tr class="align-middle">
+                        <th width="70">#</th>
+                        <th>Tên Đề tài</th>
+                        <th>Giảng viên đăng ký</th>
+                        <th>Ngày đăng ký</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in Model.DataList) {
+                        var allowChecked = topic.Status < (int)TopicStatusEnumId.PROPOSAL_SUBMITTED;
+                        <tr role="button" class="align-bottom @(allowChecked ? "allow_checked" : "" )" data-content="@topic.EncyptedID">
+                            <td>
+                                @if (allowChecked) {
+                                    <div class="d-flex flex-nowrap justify-content-start gap-2 align-items-center">
+                                        <p class="mb-0">@(++index)</p>
+                                        <input type="checkbox" />
+                                    </div>
+                                } else {
+                                    @(++index)
+                                }
+                            </td>
+                            <td width="400" class="p-2 title">
+                                <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@topic.EncyptedID" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a>
+                            </td>
+                            <td width="180" class="p-2 teachername">@topic.CreatedbyNavigation.Fullname</td>
+                            <td width="70" class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
+                            <td class="p-2 text-center status">@topic.StatusNavigation.Name</td>
+                            <td class="text-end ">
+                                <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
+                                    @if (topic.Status == (int)TopicStatusEnumId.PROPOSAL_SUBMITTED) {
+                                        <button type="button" class="py-2 edit_btn assignBtn" data-bs-toggle="modal" data-bs-target="#committee_assignment_modal">
+                                            Phân công Hội đồng
+                                        </button>
+                                    } else if (topic.Status == (int)TopicStatusEnumId.PROPOSAL_REVIEW_ASSIGNMENT) {
+                                        <button type="button" class="py-2 edit_btn updateAssignBtn" data-bs-toggle="modal" data-bs-target="#committee_assignment_modal">
+                                            Cập nhật Phân công
+                                        </button>
+                                    }
+                                </div>
+                                @if (topic.Editabled) {
+                                    
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Pagination" model="Model.Pagination" />
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="request_proposal_model" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-5">
+            <div class="modal-header">
+                <h4 class="modal-title" id="exampleModalLabel">Gửi yêu cầu nộp Thuyết minh</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group m-0">
+                        <label for="deadline">Hạn nộp thuyết minh, VD: 23:30 25/05/2025</label>
+                         <input autofocus  value="2025-05-10T23:00" type="datetime-local" maxlength="30" name="deadline" class="form-control">
+                         <span class="error"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="save_btn">Gửi yêu cầu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade no_reset" id="committee_assignment_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable my-0 h-100">
+        <div class="modal-content rounded-5">
+            <div class="modal-header">
+                <h4 class="modal-title" id="exampleModalLabel">Phân công Phê duyệt Thuyết minh</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input type="number" value="0" hidden name="id"/>
+                    <div class="form-group mb-0">
+                        <label>Tên đề tài</label>
+                        @* <input type="text" name="title" class="mb-3" readonly /> *@
+                        <textarea name="title" class="mb-3 w-100 rounded-5 p-2 px-3 text-black " rows="2" readonly></textarea>
+                    </div>
+                    <input type="text" name="topicId" hidden />
+                    <div class="row pb-3 m-0">
+                        <div class="col col-12 mb-2 ps-0">
+                            <label>Lọc giảng viên phê duyệt</label>
+                        </div>
+                        <div class="col col-5 p-0">
+                            <select name="departmentId" class="h-100 rounded-end-0">
+                                <option value="-1">------ Lọc khoa</option>
+                                @foreach (var dep in allDepartments) {
+                                    <option value="@dep.Id">@dep.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col col-7 p-0">
+                            <div class="input-group">
+                                <input placeholder="Tìm kiếm giảng viên, nhập họ tên, email, số điện thoại..." name="search" autofocus class="dropdown-toggle w-100 border-start border-start-1" style="border-top-left-radius:0!important; border-bottom-left-radius:0!important" type="text" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" />
+                                <ul id="teacher_container" class="dropdown-menu p-0 m-0 w-100 overflow-y-auto" style=" min-height: 100px; max-height:300px;">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Tên Hội đồng</label>
+                        <input name="committeeName" class="" type="text" placeholder="Nhập tên Hội đồng" />
+                    </div>
+
+                    <div class="mt-3">
+                        <h5 class="mt-auto">Bảng thành viên Hội đồng <span class="text-danger fw-light">(Tối đa 7 thành viên) (*)</span></h5>
+                        <table id="teacher_list" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="p-2">Họ và tên</th>
+                                    <th class="p-2">Số điện thoại</th>
+                                    <th class="p-2">Email</th>
+                                    <th class="p-2">Vai trò</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                        <label class="error col col-12 text-center" for="teacher-table" id="teacher-table-error"></label>
+                    </div>
+
+                    <div class="row">
+                        <div class="col col-12 col-md-6 form-group">
+                            <label class="required">Thời gian / Thời hạn</label>
+                            <input name="date" type="datetime-local" min="@DateTime.Now.AddDays(1).Date.ToString("yyyy-MM-ddTHH:mm")" max="@DateTime.Now.AddMonths(2).Date.ToString("yyyy-MM-ddTHH:mm")" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" />
+                        </div>
+                        <div class="col col-12 col-md-6 row pe-0 me-0">
+                            <div class="col col-6 px-md-0 ps-3 pe-0">
+                                <label class="mb-2 required">Tòa nhà</label>
+                                <select name="buildingId">
+                                    <option value="-1">---- Chọn Tòa nhà</option>
+                                    @foreach(var building in Model.Buildings) {
+                                        <option value="@building.Id">@building.Name</option>
+                                    })
+                                </select>
+                            </div>
+                            <div class="col col-6 pe-0 me-0">
+                                <label class="mb-2 required">Số phòng</label>
+                                 <select name="roomId">
+                                    <option value="-1">-- Chọn Số phòng</option>
+                                    @foreach(var room in Model.Rooms) {
+                                        <option class="d-none" data-building="@room.Buildingid" value="@room.Id">@room.Name</option>
+                                    })
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border border-1">
+                <button type="button" class="save_btn">Tạo phân công</button>
+                <button type="button" class="close_btn clean_btn">Làm mới</button>
+                <button type="button" class="close_btn" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script type="text/javascript">
+
+        const config = {
+            CATE_CHU_TICH_HOI_DONG_ID: "1",
+            CATE_PHAN_BIEN_ID: "2",
+            CATE_THU_KY_ID: "3",
+        }
+
+        const proposalModal = $("#request_proposal_model");
+
+        $("#mainTable tr.allow_checked").click(function() {
+            const row = $(this);
+            const checkbox = row.find("input[type='checkbox']");
+            const isChecked = checkbox.prop("checked");
+
+            // Uncheck all checkboxes
+            $("#mainTable input[type='checkbox']").prop("checked", false);
+            $("#mainTable tr").removeClass("checked");
+
+            // Toggle the clicked one
+            checkbox.prop("checked", !isChecked);
+
+            if(!isChecked == true){
+                $("#btn_sendnotice").prop("disabled", false);
+                $("#btn_phancong").prop("disabled", false);
+                row.addClass("checked");
+            }
+            else{
+                $("#btn_sendnotice").prop("disabled", true);
+                $("#btn_phancong").prop("disabled", true);
+                row.removeClass("checked")
+            }
+        })
+
+        proposalModal.on("shown.bs.modal", function () {
+            const input = $(this).find("input[name='deadline']");
+    
+            let now = new Date();
+
+            // Tính min = hôm nay + 1 ngày
+            let minDate = new Date(now);
+            minDate.setDate(minDate.getDate() + 1);
+
+            // Tính max = hôm nay + 2 tháng
+            let maxDate = new Date(now);
+            maxDate.setMonth(maxDate.getMonth() + 2);
+
+            // Set min, max attribute
+            input.attr('min', formatDate(minDate));
+            input.attr('max', formatDate(maxDate));
+
+            // Đặt giá trị mặc định là hôm nay + 10 ngày, giờ 23:00
+            let defaultDate = new Date(now);
+            defaultDate.setDate(defaultDate.getDate() + 10);
+            defaultDate.setHours(23);
+            defaultDate.setMinutes(0);
+
+            input.val(formatDate(defaultDate));
+
+            // Mở picker luôn
+            input[0].showPicker();
+        });
+
+        // Format function (yyyy-MM-ddTHH:mm)
+        function formatDate(date) {
+            let year = date.getFullYear();
+            let month = (date.getMonth() + 1).toString().padStart(2, '0');
+            let day = date.getDate().toString().padStart(2, '0');
+            let hours = date.getHours().toString().padStart(2, '0');
+            let minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        proposalModal.find(".save_btn").click(function() {
+            if (!CheckDatetimeLocal()) {
+                return;
+            }
+            SendRequest()
+        })
+
+        function SendRequest() {
+            const targetRow = $("#mainTable tbody tr.checked");
+            $.ajax({
+                url: '@Url.Action("RequireSubmitProposal", "ProposalAssignment")',
+                type: "POST",
+                data: {
+                    target: targetRow.data("content"),
+                    deadline: proposalModal.find("input[name='deadline']").val()
+                }
+            }).then((response) => {
+                if (response.code != 0) {
+                    $(".modal#error_modal").find("#message").text(response.message);
+                    $(".modal#error_modal").modal("show");
+                    return;
+                }
+                targetRow.find(".status").text("Đã gửi yêu cầu nộp thuyết minh");
+                $(".modal#success_modal").find("#message").text(response.message);
+                $(".modal#success_modal").modal("show");
+            })
+                .catch((error) => {
+                    $(".modal#error_modal").find("#message").text("Hệ thống lỗi, vui lòng thử lại sau");
+                    $(".modal#error_modal").modal("show");
+                });
+        }
+
+        function CheckDatetimeLocal(){
+            var value = proposalModal.find("input[name='deadline']").val();
+            var error = proposalModal.find(".error");
+            var isValid = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
+
+            if (!value) {
+                console.log("Datetime not selected");
+                error.text("Nhập ngày giờ");
+                return false;
+            } else if (!isValid) {
+                console.log("Invalid datetime format");
+                error.text("Vui lòng nhập đúng định đạng ngày giờ");
+                return false;
+            } else {
+                console.log("Valid datetime");
+                error.text("");
+                return true;
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        const assignModal = $("#committee_assignment_modal");
+        const assignForm = assignModal.find("form");
+        const teacherTable = $("#teacher_list");
+
+        assignForm.on("change", "select[name='departmentId']", function() {
+            AjaxGetTeacherList(assignForm.find("input[name='search'").val(), this.value, assignForm.find("select[name='departmentId'").val()).then((res) => {
+                if(res.code != 0){
+                    return;
+                }
+                RendTeacher(res.data);
+            })
+        })
+        assignForm.on("input", "input[name='search']", function() {
+            AjaxGetTeacherList(this.value, assignForm.find("select[name='departmentId'").val()).then((res) => {
+                if(res.code != 0){
+                    return;
+                }
+                RendTeacher(res.data);
+            })
+        })
+
+        function RendTeacher(list){
+            console.log(list)
+            const container = assignForm.find("#teacher_container");
+
+            // 🧹 First, dispose old tooltips
+            container.find('[data-bs-toggle="tooltip"]').each(function () {
+                const tooltip = bootstrap.Tooltip.getInstance(this);
+                if (tooltip) {
+                    tooltip.dispose();
+                }
+            });
+
+            container.empty();
+
+            if (list.length === 0) {
+                const row = `
+                            <li class="dropdown-item text-center">
+                                Không tìm thấy giảng viên
+                            </li>`;
+                container.append(row);
+                return;
+            }
+             Array.from(list).forEach((item) => {
+                const row = `
+                    <li class="dropdown-item li-teacher" data-email="${item.email}" data-phonenumber="${item.phonenumber}" data-id="${item.id}" data-fullname="${item.fullname}"
+                        data-bs-toggle="tooltip"
+                        data-bs-html="true"
+                        data-bs-placement="right"
+                        data-bs-title="<div class='container'>
+                                <p>Họ và tên: ${item.fullname}</p>
+                                <p>Email: ${item.email}</p>
+                                <p>Số điện thoại: ${item.phonenumber}</p>
+                                <p>Khoa: ${item.department.name}</p>
+                                <p>Chuyên môn: ${item.major.name}</p>
+                            </div>">
+                        ${item.fullname}
+                    </li>`;
+                container.append(row);
+            });
+
+            // 👉 Re-initialize tooltips
+            const tooltipTriggerList = [].slice.call(container.find('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // 👉 Programmatically open the dropdown
+            const dropdownToggle = assignForm.find("[data-bs-toggle='dropdown']");
+            if (dropdownToggle.length) {
+                const dropdown = bootstrap.Dropdown.getOrCreateInstance(dropdownToggle[0]);
+                dropdown.show();
+            }
+        }
+
+        function AjaxGetTeacherList(search, departId){
+            return $.ajax({
+                url: '@Url.Action("SearchTeacher", "Account")',
+                type: "GET",
+                data: {
+                    input: search,
+                    departmentId: departId
+                }
+            });
+        }
+
+        $(".assignBtn").click(function() {
+            const row = $(this).closest("tr");
+            const id = row.data("content");
+            const title = row.find(".title a").text();
+
+            const textarea = assignForm.find("textarea[name='title']");
+
+            assignForm.find("input[name='id']").val(0);
+            assignForm.find("input[name='topicId']").val(id);
+            textarea.val(title);
+
+            assignModal.find(".modal-title").text("Phân công Phê duyệt Thuyết minh");
+            assignModal.find(".save_btn").text("Tạo phân công");
+        })
+
+        $(".updateAssignBtn").click( async function() {
+            const row = $(this).closest("tr");
+            const id = row.data("content");
+            const title = row.find(".title a").text();
+
+            const textarea = assignForm.find("textarea[name='title']");
+
+            assignForm.find("input[name='topicId']").val(id);
+            textarea.val(title);
+
+            assignModal.find(".modal-title").text("Cập nhật phân công Phê duyệt Thuyết minh");
+            assignModal.find(".save_btn").text("Sửa  phân công");
+
+            // fill data
+            $("#page-loader").css("display", "flex");
+            const res = await $.ajax({
+                url: '@Url.Action("GetProposalCommittee", "Committee")',
+                type: "GET",
+                data: {
+                    topicId: id
+                }
+            });
+            $("#page-loader").css("display", "none");
+            if (!res || res.code != 0) {
+                displayError(res.message)
+            }
+
+            console.log(res.data);
+            const committee = res.data;
+            assignForm.find("input[name='id']").val(committee.id);
+            assignForm.find("input[name='committeeName']").val(committee.name);
+            assignForm.find("input[name='date']").val(committee.eventdate.slice(0, 16));
+            assignForm.find("select[name='buildingId']").val(committee.buildingid).trigger("change");
+            assignForm.find("select[name='roomId']").val(committee.roomid);
+
+            teacherTable.find("tbody").empty();
+            Array.from(committee.committeemembers).forEach((member) => {
+                AddTeacheRow(member.account.id, member.account.fullname, member.account.phonenumber, member.account.email, String(member.roleid));
+            });
+        })
+
+        assignModal.find(".clean_btn").click(function(){
+            assignForm.find("input[name='committeeName']").val("");
+            assignForm.find("input[name='date']").val(new Date().toISOString().slice(0, 16));
+            assignForm.find("select[name='buildingId']").val(-1);
+            assignForm.find("select[name='roomId']").val(-1);
+
+            teacherTable.find("tbody").empty();
+        })
+
+        $(document).ready(function() {
+            assignForm.find("select[name='buildingId']").on('change', function() {
+                var selectedBuildingId = $(this).val();
+
+                assignForm.find("select[name='roomId'] option").each(function() {
+                    var roomBuildingId = $(this).data('building');
+
+                    if (!roomBuildingId && $(this).val() === "-1") {
+                        $(this).removeClass('d-none');
+                    } else if (roomBuildingId == selectedBuildingId) {
+                        $(this).removeClass('d-none');
+                    } else {
+                        $(this).addClass('d-none');
+                    }
+                });
+
+                assignForm.find("select[name='roomId']").val('-1');
+            });
+        });
+
+        assignForm.on("click", ".li-teacher", function(){
+            const id = $(this).data("id");
+            const fullname = $(this).data("fullname");
+            const email = $(this).data("email");
+            const phonenumber = $(this).data("phonenumber");
+
+            console.log([id, fullname, email, phonenumber])
+
+            // Kiểm tra xem giáo viên đã được thêm chưa
+            if (teacherTable.find(`tr[data-id='${id}']`).length > 0) {
+                alert("Giáo viên này đã được thêm.");
+                return;
+            }
+
+            AddTeacheRow(id, fullname, phonenumber, email, "-1");
+        })
+
+        function AddTeacheRow(id, fullname, phonenumber, email, roleid){
+            const index = teacherTable.find("tbody tr").length;
+            const newRow = `
+                            <tr data-id="${id}">
+                                <td class="align-bottom">${fullname}</td>
+                                <td class="align-bottom">${phonenumber}</td>
+                                <td class="align-bottom">${email}</td>
+                                <td class="align-bottom">
+                                    <select name="members[${index}].roleid" class="form-select-sm bg-white p-1">
+                                        <option value="-1" ${"-1" == roleid ? "selected" : ""} > ---- Chọn vai trò</option>
+                                        <option value="${config.CATE_CHU_TICH_HOI_DONG_ID}" ${config.CATE_CHU_TICH_HOI_DONG_ID == roleid ? "selected":""} > Chủ tịch hội đồng</option>
+                                        <option value="${config.CATE_PHAN_BIEN_ID}" ${config.CATE_PHAN_BIEN_ID == roleid ? "selected" : ""} > Ủy viên phản biện</ option>
+                                        <option value="${config.CATE_THU_KY_ID}" ${config.CATE_THU_KY_ID == roleid ? "selected" : ""}> Thư ký hội đồng</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button tooltip="Xóa" type="button" class="p-0 delete_btn">
+                                        <img src="/images/error.png" height="30" />
+                                    </button>
+                                </td>
+                                <td hidden><input type="text" name="members[${index}].accountid" value="${id}" /></td>
+                            </tr>`;
+            teacherTable.find("tbody").append(newRow);
+        }
+
+        assignForm.on("click", ".delete_btn", function(){
+            $(this).closest("tr").remove();
+        });
+        
+        assignModal.on("click", ".save_btn", function(){
+            const id = assignForm.find("input[name='id']");
+            const topicId = assignForm.find("input[name='topicId']");
+            const time = assignForm.find("input[name='date']");
+            const buildingId = assignForm.find("select[name='buildingId']");
+            const roomId = assignForm.find("select[name='roomId']");
+            const committeeName = assignForm.find("input[name='committeeName']");
+            const memberIdRows = [];
+
+            teacherTable.find("tbody tr").each(function(){
+                const currRow = $(this);
+                const teacherId = currRow.data("id");
+                const rowid = currRow.find("select[name$='.roleid']").val();
+                memberIdRows.push({
+                    accountid: teacherId,
+                    roleid: rowid
+                });
+            })
+
+            console.log([id, topicId, time, buildingId, roomId]);
+
+            if (!committeeName.val() || committeeName.val().length==0) {
+                displayError("Vui lòng nhập tên Hội đồng");
+                return;
+            }
+            if (committeeName.val().length > 120) {
+                displayError("Tên Hội đồng quá dài, chiều dài tối đa là 120 kí tự");
+                return;
+            }
+
+            if (memberIdRows.length <= 0) {
+                displayError("Vui lòng chọn thành viên Hội đồng");
+                return;
+            }
+            if (memberIdRows.length > 7) {
+                displayError("Số lượng thành viên trong Hội đồng tối đa là 7 người");
+                return;
+            }
+
+            const numberOfChuTich = memberIdRows.filter(c => c.roleid === config.CATE_CHU_TICH_HOI_DONG_ID).length;
+            if (numberOfChuTich != 1) {
+                displayError("Thành phần hội đồng cần bảo đảm có một và chỉ một Chủ tịch.");
+                return
+            }
+            if (memberIdRows.filter(c => c.roleid === "3").length > 2) {
+                displayError("Hội đồng không được quá 2 Thư ký");
+                return
+            }
+            if (memberIdRows.filter(c => c.roleid === "-1").length > 0) {
+                displayError("Vui lòng chọn vai trò cho tất cả thành viên hội đồng");
+                return
+            }
+
+            if (!time.val()) {
+                displayError("Vui lòng chọn ngày giờ");
+                return
+            }
+
+            const now = new Date();
+            const inputDateTime = new Date(time.val());
+            const minDate = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000);
+            minDate.setHours(0, 0, 0, 0);
+            const maxDate = new Date(new Date(now).setMonth(now.getMonth() + 2));
+            maxDate.setHours(0, 0, 0, 0);
+            console.log(inputDateTime)
+            if (isNaN(inputDateTime.getTime())) {
+                displayError("Ngày và giờ không hợp lệ");
+                return;
+            }
+            if (inputDateTime < minDate || inputDateTime > maxDate) {
+                displayError("Thời gian phải từ 1 ngày sau hiện tại đến trong vòng 2 tháng tới");
+                return;
+            }
+
+            if(buildingId.val() == "-1"){
+                displayError("Vui lòng chọn địa điểm");
+                return;
+            }
+            if(roomId.val() == "-1"){
+                displayError("Vui lòng chọn địa điểm");
+                return;
+            }
+
+            SubmitCommittee(id.val(), topicId.val(), committeeName.val(), buildingId.val(), roomId.val(), time.val(), memberIdRows);
+        })
+
+        function SubmitCommittee(id, topicId, committeeName, buildingId, roomId, dateTime, members){
+            members = Array.from(members).map((item) => {
+                item.accountid = parseInt(item.accountid);
+                item.roleid = parseInt(item.roleid);
+                return item;
+            })
+            const bodyData = {
+                id: parseInt(id),
+                topicid: topicId,
+                committeename: committeeName,
+                buildingid: parseInt(buildingId),
+                roomid: parseInt(roomId),
+                datetime: dateTime,
+                members: members
+            }
+            console.log(bodyData)
+
+            $.ajax({
+                url: '@Url.Action("ModifyCommittee", "ProposalAssignment")',
+                type: "POST",
+                data: bodyData
+            }).then((response) => {
+                console.log(response);
+                if(response.code != 0){
+                    displayError(response.message);   
+                }
+                else{
+                   displaySuccess(response.message);   
+                   setTimeout(() => {
+                       location.reload();
+                   }, 1500)
+                }
+            })
+        }
+
+        function displayError(text){
+            $(".modal#error_modal").find("#message").text(text);
+            $(".modal#error_modal").modal("show");
+        }
+        function displaySuccess(text){
+            $(".modal#success_modal").find("#message").text(text);
+            $(".modal#success_modal").modal("show");
+        }
+    </script>
+}

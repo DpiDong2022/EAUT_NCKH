@@ -13,5 +13,5 @@ public partial class Room
 
     public virtual Building Building { get; set; } = null!;
 
-    public virtual ICollection<Proposal> Proposals { get; set; } = new List<Proposal>();
+    public virtual ICollection<Committee> Committees { get; set; } = new List<Committee>();
 }

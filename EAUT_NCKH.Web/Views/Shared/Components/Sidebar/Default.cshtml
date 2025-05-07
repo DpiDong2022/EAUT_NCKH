@@ -12,11 +12,11 @@
         <div class="accordion-item">
             <h2 class="accordion-header" id="flush-heading-@index">
                 @if (item.SubItems.Count > 0) {
-                    <a class="accordion-button @(item.Url == returnUrl ? "" : "collapsed")"
+                    <a class="accordion-button @(item.Url.Contains(returnUrl) ? "" : "collapsed")"
                        type="button"
                        data-bs-toggle="collapse"
                        data-bs-target="#flush-collapse-@index"
-                       aria-expanded="false"
+                       aria-expanded="@(item.Url.Contains(returnUrl) ? "true" : "false")"
                        aria-controls="flush-collapse-@index"
                        href="@item.Url">
                         @item.Title
@@ -29,9 +29,9 @@
                 }
             </h2>
             @if (item.SubItems.Count > 0) {
-                <ul id="flush-collapse-@index" class="accordion-collapse collapse list-unstyled" aria-labelledby="flush-heading-@index" data-bs-parent="#accordionFlushExample">
+                <ul id="flush-collapse-@index" class="accordion-collapse collapse list-unstyled @(item.Url.Contains(returnUrl) ? "show" : "")" aria-labelledby="flush-heading-@index" data-bs-parent="#accordionFlushExample">
                     @foreach (var subItem in item.SubItems) {
-                        <li class="nav-item"><a class="url-link" href="@subItem.Url">@subItem.Title</a></li>
+                        <li class="nav-item"><a class="accordion-button url-link @(subItem.Url == returnUrl ? "" : "collapsed")" href="@subItem.Url">@subItem.Title</a></li>
                     }
                 </ul>
             }

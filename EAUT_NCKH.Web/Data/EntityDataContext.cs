@@ -1,15 +1,22 @@
-﻿using EAUT_NCKH.Web.Models;
+﻿using System;
+using System.Collections.Generic;
+using EAUT_NCKH.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EAUT_NCKH.Web.Data;
 
-public partial class EntityDataContext: DbContext {
-    public EntityDataContext() {
+public partial class EntityDataContext : DbContext
+{
+    public EntityDataContext()
+    {
     }
 
     public EntityDataContext(DbContextOptions<EntityDataContext> options)
-        : base(options) {
+        : base(options)
+    {
     }
+
+    public virtual DbSet<Academictitle> Academictitles { get; set; }
 
     public virtual DbSet<Account> Accounts { get; set; }
 
@@ -62,8 +69,34 @@ public partial class EntityDataContext: DbContext {
     public virtual DbSet<Topicstudent> Topicstudents { get; set; }
 
     public virtual DbSet<Trainingprogram> Trainingprograms { get; set; }
-    protected override void OnModelCreating(ModelBuilder modelBuilder) {
-        modelBuilder.Entity<Account>(entity => {
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=.\\DONGSQLSERVER;Database=EautNckh;User Id=sa;Password=123456; TrustServerCertificate=True;");
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Academictitle>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__academic__3213E83FEE947661");
+
+            entity.ToTable("academictitle");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("code");
+            entity.Property(e => e.Displayorder).HasColumnName("displayorder");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Account>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__account__3213E83FE6132861");
 
             entity.ToTable("account");
@@ -120,7 +153,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_AccounRole");
         });
 
-        modelBuilder.Entity<Building>(entity => {
+        modelBuilder.Entity<Building>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__building__3213E83F3EA64D98");
 
             entity.ToTable("building");
@@ -129,27 +163,46 @@ public partial class EntityDataContext: DbContext {
             entity.Property(e => e.Displayorder).HasColumnName("displayorder");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Committee>(entity => {
+        modelBuilder.Entity<Committee>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__committe__3213E83F0919908F");
 
             entity.ToTable("committee");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Buildingid).HasColumnName("buildingid");
             entity.Property(e => e.Createddate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
+            entity.Property(e => e.Eventdate)
+                .HasColumnType("datetime")
+                .HasColumnName("eventdate");
             entity.Property(e => e.Name)
                 .HasMaxLength(120)
                 .HasColumnName("name");
+            entity.Property(e => e.Roomid).HasColumnName("roomid");
+            entity.Property(e => e.Topicid).HasColumnName("topicid");
             entity.Property(e => e.Typeid).HasColumnName("typeid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
+
+            entity.HasOne(d => d.Building).WithMany(p => p.Committees)
+                .HasForeignKey(d => d.Buildingid)
+                .HasConstraintName("FK_Committee_Building");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.Committees)
+                .HasForeignKey(d => d.Roomid)
+                .HasConstraintName("FK_Committee_Room");
+
+            entity.HasOne(d => d.Topic).WithMany(p => p.Committees)
+                .HasForeignKey(d => d.Topicid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Committee_Topic");
 
             entity.HasOne(d => d.Type).WithMany(p => p.Committees)
                 .HasForeignKey(d => d.Typeid)
@@ -157,21 +210,19 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_Committee_Type");
         });
 
-        modelBuilder.Entity<Committeemember>(entity => {
-            entity.HasKey(e => e.Id).HasName("PK__committe__3213E83FE3D6BDC1");
+        modelBuilder.Entity<Committeemember>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__committe__3213E83FD594ECB5");
 
             entity.ToTable("committeemember");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Accountid).HasColumnName("accountid");
             entity.Property(e => e.Committeeid).HasColumnName("committeeid");
             entity.Property(e => e.Createddate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
-            entity.Property(e => e.Displayorder).HasColumnName("displayorder");
             entity.Property(e => e.Roleid).HasColumnName("roleid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
@@ -180,15 +231,21 @@ public partial class EntityDataContext: DbContext {
             entity.HasOne(d => d.Account).WithMany(p => p.Committeemembers)
                 .HasForeignKey(d => d.Accountid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CommitteeMember_Account");
+                .HasConstraintName("FK_CommitteeMember_Account2");
+
+            entity.HasOne(d => d.Committee).WithMany(p => p.Committeemembers)
+                .HasForeignKey(d => d.Committeeid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeMember_Committee2");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Committeemembers)
                 .HasForeignKey(d => d.Roleid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CommitteeMember_Role");
+                .HasConstraintName("FK_CommitteeMember_Role2");
         });
 
-        modelBuilder.Entity<Committeerole>(entity => {
+        modelBuilder.Entity<Committeerole>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__committe__3213E83FE78E04AC");
 
             entity.ToTable("committeerole");
@@ -196,13 +253,20 @@ public partial class EntityDataContext: DbContext {
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
+            entity.Property(e => e.Committeetypeid).HasColumnName("committeetypeid");
             entity.Property(e => e.Displayorder).HasColumnName("displayorder");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
+
+            entity.HasOne(d => d.Committeetype).WithMany(p => p.Committeeroles)
+                .HasForeignKey(d => d.Committeetypeid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Committeerole_committeetype");
         });
 
-        modelBuilder.Entity<Committeetype>(entity => {
+        modelBuilder.Entity<Committeetype>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__committe__3213E83FA0AD4F73");
 
             entity.ToTable("committeetype");
@@ -216,7 +280,8 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Criteriaevaluationtype>(entity => {
+        modelBuilder.Entity<Criteriaevaluationtype>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__criteria__3213E83F3A659AD6");
 
             entity.ToTable("criteriaevaluationtype");
@@ -229,35 +294,26 @@ public partial class EntityDataContext: DbContext {
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
+            entity.Property(e => e.Maxscore).HasColumnName("maxscore");
             entity.Property(e => e.Type).HasColumnName("type");
         });
 
-        modelBuilder.Entity<Defenseassignment>(entity => {
+        modelBuilder.Entity<Defenseassignment>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__defensea__3213E83F0F345E33");
 
             entity.ToTable("defenseassignment");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Buildingid).HasColumnName("buildingid");
-            entity.Property(e => e.Committeeid).HasColumnName("committeeid");
             entity.Property(e => e.Createddate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
-            entity.Property(e => e.Datetime)
-                .HasColumnType("datetime")
-                .HasColumnName("datetime");
             entity.Property(e => e.Finalscore).HasColumnName("finalscore");
-            entity.Property(e => e.Roomid).HasColumnName("roomid");
             entity.Property(e => e.Topicid).HasColumnName("topicid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
-
-            entity.HasOne(d => d.Committee).WithMany(p => p.Defenseassignments)
-                .HasForeignKey(d => d.Committeeid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_defenseassignmencommittee");
 
             entity.HasOne(d => d.Topic).WithMany(p => p.Defenseassignments)
                 .HasForeignKey(d => d.Topicid)
@@ -265,7 +321,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("fk_defenseassignmentopic");
         });
 
-        modelBuilder.Entity<Department>(entity => {
+        modelBuilder.Entity<Department>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__departme__3213E83F1F22CDC8");
 
             entity.ToTable("department");
@@ -279,7 +336,8 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Evaluationimage>(entity => {
+        modelBuilder.Entity<Evaluationimage>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__evaluati__3213E83F99303EC4");
 
             entity.ToTable("evaluationimage");
@@ -308,27 +366,21 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("fk_evaluationimage_defenseassignment");
         });
 
-        modelBuilder.Entity<Finalresult>(entity => {
+        modelBuilder.Entity<Finalresult>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__finalres__3213E83F6BD1BFDB");
 
             entity.ToTable("finalresult");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Buildingid).HasColumnName("buildingid");
-            entity.Property(e => e.Committeeid).HasColumnName("committeeid");
             entity.Property(e => e.Createddate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
-            entity.Property(e => e.Datetime)
-                .HasColumnType("datetime")
-                .HasColumnName("datetime");
-            entity.Property(e => e.Pptfilepath)
+            entity.Property(e => e.Filepath)
                 .HasMaxLength(200)
                 .IsUnicode(false)
-                .HasColumnName("pptfilepath");
-            entity.Property(e => e.Roomid).HasColumnName("roomid");
-            entity.Property(e => e.Status).HasColumnName("status");
+                .HasColumnName("filepath");
             entity.Property(e => e.Submitdate)
                 .HasColumnType("datetime")
                 .HasColumnName("submitdate");
@@ -339,14 +391,6 @@ public partial class EntityDataContext: DbContext {
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
-            entity.Property(e => e.Wordfilepath)
-                .HasMaxLength(200)
-                .IsUnicode(false)
-                .HasColumnName("wordfilepath");
-
-            entity.HasOne(d => d.Committee).WithMany(p => p.Finalresults)
-                .HasForeignKey(d => d.Committeeid)
-                .HasConstraintName("fk_finalresulcommittee");
 
             entity.HasOne(d => d.Topic).WithMany(p => p.Finalresults)
                 .HasForeignKey(d => d.Topicid)
@@ -354,7 +398,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("fk_finalresultopic");
         });
 
-        modelBuilder.Entity<Finalresultevaluation>(entity => {
+        modelBuilder.Entity<Finalresultevaluation>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__finalres__3213E83FC3CB9244");
 
             entity.ToTable("finalresultevaluation");
@@ -367,6 +412,7 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("createddate");
             entity.Property(e => e.Criteriaid).HasColumnName("criteriaid");
             entity.Property(e => e.Finalresultid).HasColumnName("finalresultid");
+            entity.Property(e => e.Topicid).HasColumnName("topicid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
@@ -388,9 +434,15 @@ public partial class EntityDataContext: DbContext {
                 .HasForeignKey(d => d.Finalresultid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_finalresultevaluation_finalresult");
+
+            entity.HasOne(d => d.Topic).WithMany(p => p.Finalresultevaluations)
+                .HasForeignKey(d => d.Topicid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_finalresultevaluation_topic");
         });
 
-        modelBuilder.Entity<Major>(entity => {
+        modelBuilder.Entity<Major>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__major__3213E83FA957E948");
 
             entity.ToTable("major");
@@ -414,7 +466,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_MajorDepartment");
         });
 
-        modelBuilder.Entity<Notification>(entity => {
+        modelBuilder.Entity<Notification>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__notifica__3213E83FB3E20E19");
 
             entity.ToTable("notification");
@@ -435,7 +488,8 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("updateddate");
         });
 
-        modelBuilder.Entity<Notificationaccount>(entity => {
+        modelBuilder.Entity<Notificationaccount>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__notifica__3213E83FE4B325BC");
 
             entity.ToTable("notificationaccount");
@@ -467,28 +521,24 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("fk_notificationaccounaccount");
         });
 
-        modelBuilder.Entity<Proposal>(entity => {
+        modelBuilder.Entity<Proposal>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__proposal__3213E83F66F56763");
 
             entity.ToTable("proposal");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Buildingid).HasColumnName("buildingid");
-            entity.Property(e => e.Committeeid).HasColumnName("committeeid");
             entity.Property(e => e.Createddate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
-            entity.Property(e => e.Currentstage).HasColumnName("currentstage");
-            entity.Property(e => e.Datetime)
-                .HasColumnType("datetime")
-                .HasColumnName("datetime");
             entity.Property(e => e.Filepath)
                 .HasMaxLength(250)
                 .IsUnicode(false)
                 .HasColumnName("filepath");
-            entity.Property(e => e.Roomid).HasColumnName("roomid");
-            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.Note)
+                .HasMaxLength(250)
+                .HasColumnName("note");
             entity.Property(e => e.Submitdate)
                 .HasColumnType("datetime")
                 .HasColumnName("submitdate");
@@ -500,25 +550,14 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
 
-            entity.HasOne(d => d.Building).WithMany(p => p.Proposals)
-                .HasForeignKey(d => d.Buildingid)
-                .HasConstraintName("FK_Proposal_Building");
-
-            entity.HasOne(d => d.Committee).WithMany(p => p.Proposals)
-                .HasForeignKey(d => d.Committeeid)
-                .HasConstraintName("FK_Proposal_Committee");
-
-            entity.HasOne(d => d.Room).WithMany(p => p.Proposals)
-                .HasForeignKey(d => d.Roomid)
-                .HasConstraintName("FK_Proposal_Room");
-
             entity.HasOne(d => d.Topic).WithMany(p => p.Proposals)
                 .HasForeignKey(d => d.Topicid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Proposal_Topic");
         });
 
-        modelBuilder.Entity<Proposalevaluation>(entity => {
+        modelBuilder.Entity<Proposalevaluation>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__proposal__3213E83FC46651E7");
 
             entity.ToTable("proposalevaluation");
@@ -530,9 +569,11 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
             entity.Property(e => e.Feedback)
-                .HasMaxLength(1000)
+                .HasMaxLength(2000)
                 .HasColumnName("feedback");
             entity.Property(e => e.Proposalid).HasColumnName("proposalid");
+            entity.Property(e => e.Statusid).HasColumnName("statusid");
+            entity.Property(e => e.Topicid).HasColumnName("topicid");
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
@@ -547,9 +588,20 @@ public partial class EntityDataContext: DbContext {
                 .HasForeignKey(d => d.Proposalid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ProposalEvaluation_Proposal");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.Proposalevaluations)
+                .HasForeignKey(d => d.Statusid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_proposalevaluation_Substatus");
+
+            entity.HasOne(d => d.Topic).WithMany(p => p.Proposalevaluations)
+                .HasForeignKey(d => d.Topicid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ProposalEvaluation_Topic");
         });
 
-        modelBuilder.Entity<Role>(entity => {
+        modelBuilder.Entity<Role>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__role__3213E83FACF09DCD");
 
             entity.ToTable("role");
@@ -563,7 +615,8 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Room>(entity => {
+        modelBuilder.Entity<Room>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__room__3213E83FC53DAF18");
 
             entity.ToTable("room");
@@ -581,13 +634,19 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_Room_Building");
         });
 
-        modelBuilder.Entity<Student>(entity => {
-            entity.HasKey(e => e.Id).HasName("PK__student__3213E83F969C454D");
+        modelBuilder.Entity<Student>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_student_id");
 
             entity.ToTable("student");
 
+            entity.HasIndex(e => e.Phonenumber, "UQ__student__622BF0C29F5C6D73").IsUnique();
+
+            entity.HasIndex(e => e.Email, "UQ__student__AB6E616466E42BE5").IsUnique();
+
             entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+                .HasMaxLength(255)
+                .IsUnicode(false)
                 .HasColumnName("id");
             entity.Property(e => e.Accountid).HasColumnName("accountid");
             entity.Property(e => e.Classname)
@@ -598,7 +657,19 @@ public partial class EntityDataContext: DbContext {
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
+            entity.Property(e => e.Departmentid).HasColumnName("departmentid");
+            entity.Property(e => e.Email)
+                .HasMaxLength(120)
+                .IsUnicode(false)
+                .HasColumnName("email");
+            entity.Property(e => e.Fullname)
+                .HasMaxLength(100)
+                .HasColumnName("fullname");
             entity.Property(e => e.Majorid).HasColumnName("majorid");
+            entity.Property(e => e.Phonenumber)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("phonenumber");
             entity.Property(e => e.Trainingprogramid).HasColumnName("trainingprogramid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
@@ -606,8 +677,11 @@ public partial class EntityDataContext: DbContext {
 
             entity.HasOne(d => d.Account).WithMany(p => p.Students)
                 .HasForeignKey(d => d.Accountid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_StudenAccount");
+
+            entity.HasOne(d => d.Department).WithMany(p => p.Students)
+                .HasForeignKey(d => d.Departmentid)
+                .HasConstraintName("FK_StudenDepartment");
 
             entity.HasOne(d => d.Major).WithMany(p => p.Students)
                 .HasForeignKey(d => d.Majorid)
@@ -620,7 +694,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_StudenTrainingprogram");
         });
 
-        modelBuilder.Entity<Substatus>(entity => {
+        modelBuilder.Entity<Substatus>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__substatu__3213E83F84F7C4C9");
 
             entity.ToTable("substatus");
@@ -643,15 +718,16 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Teacher>(entity => {
+        modelBuilder.Entity<Teacher>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__teacher__3213E83FBD3C12B8");
 
             entity.ToTable("teacher");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Academictitle)
-                .HasMaxLength(50)
-                .HasColumnName("academictitle");
+            entity.Property(e => e.Academictitleid)
+                .HasDefaultValue(1)
+                .HasColumnName("academictitleid");
             entity.Property(e => e.Accountid).HasColumnName("accountid");
             entity.Property(e => e.Createddate)
                 .HasDefaultValueSql("(getdate())")
@@ -661,6 +737,11 @@ public partial class EntityDataContext: DbContext {
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
+
+            entity.HasOne(d => d.Academictitle).WithMany(p => p.Teachers)
+                .HasForeignKey(d => d.Academictitleid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Teacher_academictitle");
 
             entity.HasOne(d => d.Account).WithMany(p => p.Teachers)
                 .HasForeignKey(d => d.Accountid)
@@ -673,7 +754,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_Teacher_major");
         });
 
-        modelBuilder.Entity<Topic>(entity => {
+        modelBuilder.Entity<Topic>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__topic__3213E83F8676E274");
 
             entity.ToTable("topic");
@@ -688,6 +770,9 @@ public partial class EntityDataContext: DbContext {
             entity.Property(e => e.Enddate)
                 .HasColumnType("datetime")
                 .HasColumnName("enddate");
+            entity.Property(e => e.Note)
+                .HasMaxLength(600)
+                .HasColumnName("note");
             entity.Property(e => e.Secondteacherid).HasColumnName("secondteacherid");
             entity.Property(e => e.Startdate)
                 .HasColumnType("datetime")
@@ -696,10 +781,6 @@ public partial class EntityDataContext: DbContext {
                 .HasDefaultValue(3)
                 .HasColumnName("status");
             entity.Property(e => e.Studentid).HasColumnName("studentid");
-            entity.Property(e => e.Substatus)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("substatus");
             entity.Property(e => e.Title)
                 .HasMaxLength(255)
                 .HasColumnName("title");
@@ -730,14 +811,10 @@ public partial class EntityDataContext: DbContext {
             entity.HasOne(d => d.Student).WithMany(p => p.TopicStudents)
                 .HasForeignKey(d => d.Studentid)
                 .HasConstraintName("FK_Topic_Student");
-
-            entity.HasOne(d => d.SubstatusNavigation).WithMany(p => p.Topics)
-                .HasPrincipalKey(p => p.Code)
-                .HasForeignKey(d => d.Substatus)
-                .HasConstraintName("FK_Topic_Substatus");
         });
 
-        modelBuilder.Entity<Topicstatus>(entity => {
+        modelBuilder.Entity<Topicstatus>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__topicsta__3213E83FFEF2325D");
 
             entity.ToTable("topicstatus");
@@ -758,7 +835,8 @@ public partial class EntityDataContext: DbContext {
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Topicstudent>(entity => {
+        modelBuilder.Entity<Topicstudent>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__topicstu__3213E83F1A5136FC");
 
             entity.ToTable("topicstudent");
@@ -768,7 +846,11 @@ public partial class EntityDataContext: DbContext {
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
-            entity.Property(e => e.Studentcode).HasColumnName("studentcode");
+            entity.Property(e => e.Role).HasColumnName("role");
+            entity.Property(e => e.Studentcode)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("studentcode");
             entity.Property(e => e.Topicid).HasColumnName("topicid");
 
             entity.HasOne(d => d.StudentcodeNavigation).WithMany(p => p.Topicstudents)
@@ -782,7 +864,8 @@ public partial class EntityDataContext: DbContext {
                 .HasConstraintName("FK_TopicStudenTopic");
         });
 
-        modelBuilder.Entity<Trainingprogram>(entity => {
+        modelBuilder.Entity<Trainingprogram>(entity =>
+        {
             entity.HasKey(e => e.Id).HasName("PK__training__3213E83F6ADA4ADE");
 
             entity.ToTable("trainingprogram");
@@ -802,7 +885,6 @@ public partial class EntityDataContext: DbContext {
 
         OnModelCreatingPartial(modelBuilder);
     }
-
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

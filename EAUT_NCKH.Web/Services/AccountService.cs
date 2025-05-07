@@ -17,41 +17,49 @@ namespace EAUT_NCKH.Web.Services
             return await _accountRepository.GetAll(options);
         }
 
-        public async Task<List<Account>>? GetDataTable(AccountDataTableOptions options, int senderId) {
+        public async Task<List<Account>>? GetDataTable(AccountIndexViewPage options, int senderId) {
             return await _accountRepository.GetDataTable(options, senderId);
         }
-        public async Task<double> GetCountDataTable(AccountDataTableOptions options, int senderId) {
+        public async Task<double> GetCountDataTable(AccountIndexViewPage options, int senderId) {
             return await _accountRepository.GetCountDataTable(options, senderId);
         }
         public async Task<Response> ChangePasswordAsync(int userId, string currentPass, string newPass, string confirmNewPass) {
             return await _accountRepository.ChangePassword(userId, currentPass, newPass, confirmNewPass);
         }
 
-        public async Task<ResponseData> AddOrEditToNCKH(GeneralInformationAccount viewModel) {
+        public async Task<ResponseData<int>> AddOrEditToNCKH(GeneralInformationAccount viewModel) {
             return await _accountRepository.AddOrEditToNCKH(viewModel);
         }
 
-        public async Task<ResponseData> AddOrEditTeacher(ResearchAdvisorViewModel viewModel, int createrId) {
+        public async Task<ResponseData<int>> AddOrEditTeacher(ResearchAdvisorViewModel viewModel, int createrId) {
             return await _accountRepository.AddOrEditTeacher(viewModel, createrId);
         }
 
-        public async Task<ResponseData> AddOrEditStudent(StudentViewModel viewModel, int createrId) {
+        public async Task<ResponseData<int>> AddOrEditStudent(StudentViewModel viewModel, int createrId) {
             return await _accountRepository.AddOrEditStudent(viewModel, createrId);
         }
 
-        public async Task<ResponseData> GetAccountInformation(int id) {
+        public async Task<ResponseData<object>> GetAccountInformation(int id) {
             return await _accountRepository.GetAccountInformation(id);
         }
+        public async Task<ResponseData<AccountDto>> GetAccountInformationAccount(int id) {
+            return await _accountRepository.GetAccountInformationAccount(id);
+        }
+
         public async Task<Account?> GetAccountByEmailAsync(string email) {
             return await _accountRepository.GetAccountByEmail(email);
         }
 
-        public async Task<ResponseData> GetOTP(string email) {
+        public async Task<Response> GetOTP(string email) {
             return await _accountRepository.CreateOTP(email);
         }
 
-        public async Task<ResponseData> VarifyOTP(string otp, string email) {
+        public async Task<Response> VarifyOTP(string otp, string email) {
             return await _accountRepository.VarifyOTP(otp, email);
+        }
+
+        public async Task<ResponseData<List<AccountDto>>> SearchTeacher(string input, int departmentId) {
+            return await _accountRepository.SearchTeacher(input, departmentId);
         }
     }
 }

@@ -19,7 +19,15 @@ public partial class Proposalevaluation
 
     public DateTime? Updateddate { get; set; }
 
+    public int Topicid { get; set; }
+
+    public int Statusid { get; set; }
+
     public virtual Account Approver { get; set; } = null!;
 
     public virtual Proposal Proposal { get; set; } = null!;
+
+    public virtual Substatus Status { get; set; } = null!;
+
+    public virtual Topic Topic { get; set; } = null!;
 }

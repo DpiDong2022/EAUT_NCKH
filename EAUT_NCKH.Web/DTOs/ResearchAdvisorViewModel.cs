@@ -1,7 +1,7 @@
 ﻿namespace EAUT_NCKH.Web.DTOs {
     public class ResearchAdvisorViewModel : GeneralInformationAccount {
         public int? majorId { get; set; }
-        public string? academicTitle { get; set; }
+        public int? academicTitleId { get; set; }
     }
     public class GeneralInformationAccount {
         public int roleId { get; set; }
