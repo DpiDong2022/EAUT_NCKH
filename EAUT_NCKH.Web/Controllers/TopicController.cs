@@ -163,8 +163,22 @@ namespace EAUT_NCKH.Web.Controllers
 
         [HttpGet("get-student-topic-registerd")]
         [Authorize(Roles = RoleEnums.SCIENTIFIC_RESEARCH_OFFICE + "," + RoleEnums.DEPARTMENT_SCIENTIFIC_RESEARCH_TEAM)]
-        public async Task<IActionResult> GetRegisterdTopicList() {
-            var data = await _reportService.GetTopicRegisterStudentList();
+        public async Task<IActionResult> GetRegisterdTopicList(int DepartmentId = -1, int Year = -1, int StatusId = -1, string Search = "", int PageNumber = 1, int PageLength = 10) {
+
+            var token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
+            var senderId = _authService.GetAccountIdFromToken(token??"");
+
+            var options = new TopicIndexViewPage{
+                DepartmentId = DepartmentId,
+                Year = Year,
+                Status = StatusId, 
+                Search = Search,
+                Pagination = new DataTableOptions{
+                    PageLength = PageLength,
+                    PageNumber = PageNumber
+                }
+            };
+            var data = await _reportService.GetTopicRegisterStudentList(options, senderId??0);
             if (data == null) {
                 return Ok(new Response("Hệ thống lỗi, vui lòng thử lại sau"));
             } else {

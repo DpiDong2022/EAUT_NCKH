@@ -13,5 +13,13 @@ namespace EAUT_NCKH.Web.Services {
         public async Task<ResponseData<List<Notificationaccount>>> GetNotification(int senderId, int startNotificationId, int len) {
             return await _notificationRepository.GetNotifications(senderId, startNotificationId, len);
         }
+
+        public Boolean HasNewNotifi(int senderId) {
+            return _notificationRepository.HasNewNotifi(senderId);
+        }
+
+        public void SeenNotifi(int senderId) {
+            _notificationRepository.SeenNotifi(senderId);
+        }
     }
 }

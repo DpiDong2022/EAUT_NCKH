@@ -1,4 +1,5 @@
 ﻿@using EAUT_NCKH.Web.Enums
+@using EAUT_NCKH.Web.Helpers
 @model CommitteeIndexViewPage
 @{
     ViewData["Title"] = "Quản lý Hội đồng";
@@ -19,7 +20,7 @@
 
             <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3">
                 <div class="d-flex gap-3 flex-nowrap">
-                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" asp-for="DepartmentId">
+                    <select onchange="$('#datatable_form').trigger('submit')" style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" asp-for="DepartmentId">
                         <option value="-1">-------- Chọn Khoa</option>
                         @foreach (var depart in Model.Departments) {
                             if (depart.Id == Model.DepartmentId) {
@@ -39,7 +40,7 @@
                             }
                         }
                     </select>
-                    <select style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" asp-for="RoomId">
+                    <select onchange="$('#datatable_form').trigger('submit')" style="width: 200px!important; min-width: 200px!important;" class="form-select rounded-pill" asp-for="RoomId">
                         <option value="-1">-------- Chọn phòng</option>
                         @foreach (var item in Model.Rooms) {
                             if (item.Id == Model.RoomId) {
@@ -61,7 +62,7 @@
 
             <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3 mb-4">
                 <div class="d-flex gap-3 flex-nowrap">
-                    <select style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill" asp-for="TypeId">
+                    <select onchange="$('#datatable_form').trigger('submit')" style="width: 250px!important; min-width: 250px!important;" class="form-select rounded-pill" asp-for="TypeId">
                         <option value="-1">-------- Loại Hội đồng</option>
                         @foreach (var item in Model.CommitteeTypes) {
                             if (item.Id == Model.TypeId) {
@@ -122,7 +123,9 @@
                             <td>
                                 @(++index)
                             </td>
-                            <td>@comittee.Topic.Title</td>
+                            <td class="p-2 title">
+                                <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@MyHelper.GenerateEncodedId(comittee.Topicid)" data-bs-toggle="tooltip" title="Xem chi tiết">@comittee.Topic.Title</a>
+                            </td>
                             <td>@comittee.Name</td>
                             <td>@comittee.Building.Name</td>
                             <td>@comittee.Room.Name</td>

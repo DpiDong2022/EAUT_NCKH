@@ -52,5 +52,34 @@ namespace EAUT_NCKH.Web.Repositories {
             return new ResponseData<List<Notificationaccount>>(0, "OK", notifications);
         }
 
+        public bool HasNewNotifi(int senderId) {
+            var senderAcc = _context.Accounts.FirstOrDefault(c => c.Id == senderId);
+            if (senderAcc==null) {
+                return false;
+            }
+
+            var hasNewNotifi = _context.Notificationaccounts
+                .Where(c => c.Receiverid == senderId && c.Isread == false).Any();
+
+            return hasNewNotifi;
+        }
+
+        public void SeenNotifi(int senderId) {
+            var senderAcc = _context.Accounts.FirstOrDefault(c => c.Id == senderId);
+            if (senderAcc == null) {
+                return;
+            }
+
+            if (senderAcc.Roleid == (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE ) {
+                return;
+            }
+
+            var unReadNotifications = _context.Notificationaccounts.Where(c => c.Receiverid == senderId && c.Isread==false);
+            foreach(var item in unReadNotifications) {
+                item.Isread = true;
+            }
+            _context.Notificationaccounts.UpdateRange(unReadNotifications);
+            _context.SaveChangesAsync();
+        }
     }
 }

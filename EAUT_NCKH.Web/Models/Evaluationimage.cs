@@ -17,5 +17,9 @@ public partial class Evaluationimage
 
     public DateTime? Updateddate { get; set; }
 
+    public int Topicid { get; set; }
+
     public virtual Defenseassignment Defenseassignment { get; set; } = null!;
+
+    public virtual Topic Topic { get; set; } = null!;
 }

@@ -9,5 +9,6 @@
         public string? Value { get; set; }
         public string? Content { get; set; }
         public bool IsScore { get; set; }
+        public string MaxScore { get; set; }
     }
 }

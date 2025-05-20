@@ -15,7 +15,11 @@ public partial class Defenseassignment
 
     public int? Finalscore { get; set; }
 
+    public int? PrizeId { get; set; }
+
     public virtual ICollection<Evaluationimage> Evaluationimages { get; set; } = new List<Evaluationimage>();
+
+    public virtual Prize? Prize { get; set; }
 
     public virtual Topic Topic { get; set; } = null!;
 }

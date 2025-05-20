@@ -118,4 +118,12 @@
         DEFENSE_RESULT_UY_VIEN = 12,
         DEFENSE_RESULT_PBDL = 13,
     }
+
+    public enum PrizeEnumId {
+        FIRST_PRIZE = 1,
+        SECOND_PRIZE = 2,
+        THIRD_PRIZE = 3,
+        CONSOLATION_PRIZE = 4,
+        NO_PRIZE = 5,
+    }
 }

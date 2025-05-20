@@ -7,6 +7,7 @@ using System.Text;
 
 namespace EAUT_NCKH.Web.Helpers {
     public static class MyHelper {
+        private static Hashids _idHasher = new Hashids("sdfklhsds87w953485kterk5646nteiryt8934thkefi", 10); 
         public static string GenerateRandomPassword(int length) {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
             var random = new Random();
@@ -82,6 +83,8 @@ namespace EAUT_NCKH.Web.Helpers {
             }
         }
 
-
+        public static string GenerateEncodedId(int id) {
+            return _idHasher.Encode(id);
+        }
     }
 }

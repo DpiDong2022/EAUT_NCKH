@@ -3,6 +3,7 @@
 @{
     var account = ViewBag.account as AccountDto;
     var d = 1;
+    var hasNewNotifi = (bool)ViewBag.HasNewNotifi;
 }
 
 <!DOCTYPE html>
@@ -42,36 +43,24 @@
                                  data-bs-auto-close="outside"
                                  data-bs-target="#notifAlert">
                                 <img class="m-auto" height="25" width="25" src="/images/notification-bell.png" />
-                                <p class="news text-danger">New</p>
+                                <p class="news text-danger @(!hasNewNotifi ? "d-none" : "" )">New</p>
                             </div>
                             <!-- Danh sách thông báo xổ xuống -->
                             <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="notificationDropdown" style="width: 400px;">
                                 <li><strong class="dropdown-header px-2">Thông báo</strong></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <div style="max-height:500px;" class="overflow-y-auto" id="noti_container">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-start flex-column" href="#">
-                                        <i class="bi bi-envelope me-2 text-primary"></i>
-                                        <div>
-                                            <div class="fw-bold">Thuyết minh đã được duyệt</div>
-                                            <small>2 phút trước</small>
-                                        </div>
-                                        <p class="text-wrap content mb-0">Hạn nộp thuyết minh cho đề tài "Chuyển đổi số trong Marketing: Nghiên cứu trường hợp một thương hiệu bán lẻ tại Việt Nam" đã được cập nhật. Hạn mới: 23 giờ 00 phút, ngày 06 tháng 05, 2025</p>
-                                    </a>
+                                <li style="max-height:500px;" class="overflow-y-auto">
+                                    <ul id="noti_container" class="list-unstyled mb-0"></ul>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-start flex-column" href="#">
-                                        <i class="bi bi-exclamation-circle me-2 text-warning"></i>
-                                        <div>
-                                            <div class="fw-bold">Yêu cầu nộp thuyết minh</div>
-                                            <small>5 giờ trước</small>
-                                        </div>
-                                        <p class="text-wrap content mb-0">Hạn nộp thuyết minh cho đề tài "Chuyển đổi số trong Marketing: Nghiên cứu trường hợp một thương hiệu bán lẻ tại Việt Nam" đã được cập nhật. Hạn mới: 23 giờ 00 phút, ngày 06 tháng 05, 2025</p>
-                                    </a>
-                                </li>
-                                </div>
                                 <li><hr class="dropdown-divider divider2"></li>
-                        <li><strong role="button" id="notification_see_more" class="dropdown-header text-center"><a>Xem thêm</a></strong></li>
+                                <li>
+                                    <strong role="button" id="notification_see_more" class="dropdown-header text-center">
+                                        <a id="see_more_link">Xem thêm</a>
+                                        <div id="see_more_spinner" class="spinner-border spinner-border-sm text-primary ms-2 d-none" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </strong>
+                                </li>
                             </ul>
                         </div>
                         <div id="avt_icon" class="p-2 rounded-circle border border-primary" role="button"
@@ -178,8 +167,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer justify-content-between mt-1">
-                    <button type="button" class="edit_btn">Sửa thông tin</button>
+                <div class="modal-footer justify-content-end mt-1">
                     <button type="button" class="save_btn save d-none">Lưu thông tin</button>
                     <div class="d-flex justify-content-between gap-3">
                         <button type="button" class="close_btn" data-bs-dismiss="modal">Đóng</button>

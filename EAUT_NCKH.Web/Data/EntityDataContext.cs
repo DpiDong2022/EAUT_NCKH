@@ -48,6 +48,8 @@ public partial class EntityDataContext : DbContext
 
     public virtual DbSet<Notificationaccount> Notificationaccounts { get; set; }
 
+    public virtual DbSet<Prize> Prizes { get; set; }
+
     public virtual DbSet<Proposal> Proposals { get; set; }
 
     public virtual DbSet<Proposalevaluation> Proposalevaluations { get; set; }
@@ -69,10 +71,6 @@ public partial class EntityDataContext : DbContext
     public virtual DbSet<Topicstudent> Topicstudents { get; set; }
 
     public virtual DbSet<Trainingprogram> Trainingprograms { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.\\DONGSQLSERVER;Database=EautNckh;User Id=sa;Password=123456; TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -310,10 +308,15 @@ public partial class EntityDataContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("createddate");
             entity.Property(e => e.Finalscore).HasColumnName("finalscore");
+            entity.Property(e => e.PrizeId).HasColumnName("prizeId");
             entity.Property(e => e.Topicid).HasColumnName("topicid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
+
+            entity.HasOne(d => d.Prize).WithMany(p => p.Defenseassignments)
+                .HasForeignKey(d => d.PrizeId)
+                .HasConstraintName("fk_defenseassignmen_prize");
 
             entity.HasOne(d => d.Topic).WithMany(p => p.Defenseassignments)
                 .HasForeignKey(d => d.Topicid)
@@ -356,6 +359,7 @@ public partial class EntityDataContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("filepath");
+            entity.Property(e => e.Topicid).HasColumnName("topicid");
             entity.Property(e => e.Updateddate)
                 .HasColumnType("datetime")
                 .HasColumnName("updateddate");
@@ -364,6 +368,11 @@ public partial class EntityDataContext : DbContext
                 .HasForeignKey(d => d.Defenseassignmentid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_evaluationimage_defenseassignment");
+
+            entity.HasOne(d => d.Topic).WithMany(p => p.Evaluationimages)
+                .HasForeignKey(d => d.Topicid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_evaluationimage_topic");
         });
 
         modelBuilder.Entity<Finalresult>(entity =>
@@ -519,6 +528,19 @@ public partial class EntityDataContext : DbContext
                 .HasForeignKey(d => d.Receiverid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_notificationaccounaccount");
+        });
+
+        modelBuilder.Entity<Prize>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__prize__3213E83FD7DDC81B");
+
+            entity.ToTable("prize");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("name");
         });
 
         modelBuilder.Entity<Proposal>(entity =>

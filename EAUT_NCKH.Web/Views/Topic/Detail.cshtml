@@ -18,6 +18,17 @@
     .committee-table td{
         font-size: 14px!important;
     }
+
+    .image-hover-wrapper img {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+        border-radius: 8px;
+    }
+
+    .image-hover-wrapper:hover img {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
 </style>
 
 <div class="p-3 h-100 overflow-auto">
@@ -492,30 +503,32 @@
                     </div>
                     <div class="row">
                         <div class="col col-3 fw-bold">
-                            Hình ảnh minh chứng:
+                            Giải thưởng:
                         </div>
                         <div class="col col-8">
-                            <div class="row">
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
-                            </div>
-                            <div class="row">
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
-                            </div>
-                            <div class="row">
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
-                            </div>
-                            <div class="row">
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq1.jpg" /></div>
-                                <div role="button" data-bs-toggle="modal" data-bs-target="#viewImage_modal" class="col col-3 p-2"><img class="w-100 shadow-sm" src="/images/KetQuas/kq2.jpg" /></div>
+                            @topic.Defenseassignments.FirstOrDefault().Prize.Name
+                            <hr class="m-2 mx-0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3 fw-bold">
+                            Hình ảnh minh chứng:
+                        </div>
+                        <div class="col-9">
+                            <div class="d-flex justify-content-start gap-3 flex-wrap">
+                                @foreach (var evaluationImage in topic.Evaluationimages) {
+                                    <div class="d-flex flex-column align-items-center">
+                                        <p style="font-size: 14px;" class="mb-1 text-center">@evaluationImage.Filename</p>
+                                        <div role="button"
+                                             data-bs-toggle="modal"
+                                             data-bs-target="#viewImage_modal"
+                                             class="w-100 px-2 image-hover-wrapper d-flex justify-content-center click_image">
+                                            <img src="@evaluationImage.Filepath"
+                                                 class="img-fluid rounded-0"
+                                                 style="max-height: 150px; object-fit: contain;" />
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -526,11 +539,11 @@
 </div>
 
 <div class="modal fade" id="viewImage_modal" tabindex="-1" aria-labelledby="exampleModalLabel">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl h-100 my-0">
         <div class="modal-content rounded-5">
             <div class="modal-content">
-                <div class="modal-body overflow-y-hidden position-relative text-center">
-                    <img class="vh-100 shadow-sm" src="/images/KetQuas/kq1.jpg" />
+                <div class="modal-body overflow-y position-relative text-center">
+                    <img id="evaluationPreViewId" class="vh-100 shadow-sm" />
                 </div>
                 <button type="button" class="close_btn position-absolute" style="right: 29px; bottom: 12px;" data-bs-dismiss="modal">Đóng</button>
             </div>
@@ -811,10 +824,11 @@
             let index = 1;
 
             evaluationItems.forEach(item => {
+                console.log(item)
                 const isScore = item.isScore;
                 const value = item.value?.trim() || "";
                 const content = item.content || "";
-                const maxscore = item.maxscore || 0;
+                const maxscore = item.maxScore;
 
                 if (isScore) {
                     const score = parseFloat(value) || 0;
@@ -855,5 +869,9 @@
             $('#evaluation_modal').modal('show');
         }
 
+        $(".click_image").on("click", function(){
+            const src = $(this).find("img").prop("src");
+            $("#evaluationPreViewId").prop("src", src);
+        })
     </script>
 }

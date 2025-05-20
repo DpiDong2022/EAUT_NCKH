@@ -1,8 +1,10 @@
 ﻿using DocumentFormat.OpenXml.Presentation;
 using EAUT_NCKH.Web.DTOs;
 using EAUT_NCKH.Web.DTOs.Request;
+using EAUT_NCKH.Web.Models;
 using EAUT_NCKH.Web.Repositories;
 using EAUT_NCKH.Web.Repositories.IRepositories;
+using System.ComponentModel;
 
 namespace EAUT_NCKH.Web.Services {
     public class TopicDefenseService {
@@ -24,8 +26,12 @@ namespace EAUT_NCKH.Web.Services {
             return await _topicDefenseRepository.AddOrEditCommitteeAssignment(senderId, request);
         }
 
-        public async Task<Response> ModifyScore(int senderId, string topicId, int score, IFormFile files) {
-            return await _topicDefenseRepository.ModifyScore(senderId, topicId, score, files);
+        public async Task<Response> ModifyScore(int senderId, int prizeId, string topicId, int score, List<IFormFile> files, string removedImages) {
+            return await _topicDefenseRepository.ModifyScore(senderId, prizeId, topicId, score, files, removedImages);
+        }
+
+        public async Task<ResponseData<Defenseassignment>> GetScoreDetails(int senderId, string encodedTopicId) {
+            return await _topicDefenseRepository.GetScoreDetails(senderId, encodedTopicId);
         }
     }
 }

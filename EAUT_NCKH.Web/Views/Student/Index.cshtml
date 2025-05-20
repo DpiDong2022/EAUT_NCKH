@@ -150,5 +150,12 @@
                 });
             }
         });
+
+        $("#main_form select[name='DepartmentId']").on("change", () => {
+            $("#main_form").trigger("submit");
+        })
+        $("#main_form select[name='MajorId']").on("change", () => {
+            $("#main_form").trigger("submit");
+        })
     </script>
 }

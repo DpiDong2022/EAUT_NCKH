@@ -5,35 +5,74 @@ using EAUT_NCKH.Web.Data;
 using EAUT_NCKH.Web.DTOs;
 using EAUT_NCKH.Web.DTOs.Options;
 using EAUT_NCKH.Web.Models;
+using EAUT_NCKH.Web.Repositories;
+using EAUT_NCKH.Web.Repositories.IRepositories;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
 
 namespace EAUT_NCKH.Web.Services {
     public class ReportService {
         private readonly EntityDataContext _context;
+        private readonly ITopicRepository _topicRepository;
 
-        public ReportService(EntityDataContext context) {
+        public ReportService(EntityDataContext context, ITopicRepository topicRepository) {
             _context = context;
+            _topicRepository = topicRepository;
         }
 
-        public async Task<byte[]> GetTopicRegisterStudentList(TopicIndexViewPage options = null) {
-            var keyValues = new Dictionary<string, string>{
+        public async Task<byte[]> GetTopicRegisterStudentList(TopicIndexViewPage options, int userId) {
+            options.Pagination.PageNumber = 1;
+            options.Pagination.PageLength = int.Parse((await _topicRepository.GetCountDataTable(options, userId)).ToString());
+            var topicList = await _topicRepository.GetDataTable(options, userId);
+
+            var keyValues = new Dictionary<string, string> {
                 {"{DONVI}", "VIỆN ĐÀO TẠO VÀ HỢP TÁC QUỐC TẾ"},
-                {"{YEAR}", DateTime.Now.ToString("yyyy") },
-                {"day", DateTime.Now.ToString("dd") },
-                {"month", DateTime.Now.ToString("MM") },
-                {"year", DateTime.Now.ToString("yyyy") },
+                {"{YEAR}", DateTime.Now.ToString("yyyy")},
+                {"day", DateTime.Now.ToString("dd")},
+                {"month", DateTime.Now.ToString("MM")},
+                {"year", DateTime.Now.ToString("yyyy")},
             };
 
-            string[][] studentData = new[]
-            {
-                new[]{ "1", "Chuyển đổi số trong Marketing: Nghiên cứu trường hợp một thương hiệu bán lẻ tại Việt Nam", "Huỳnh Gia Dũng", "20215405", "DC.MKTEN.13.1", "Trưởng nhóm", "TS. Gian vien hai", "GS. Hồ Thị Lan", "0550004027", "huynhgiadung20215405@gmail.com", "" },
-                new[] { "2", "Topic B", "Alice Nguyen", "654321", "CSE102", "Member", "Dr. Max", "", "0987654321", "alice@example.com", "" }
-            };
+            var dataList = new List<string[]>();
+            int index = 1;
 
-            var data = await GenerateReport("Templates/danhsach_sinhvien_dangky_detai.docx", keyValues, studentData);
+            foreach (var item in topicList) {
+                var studentList = _context.Topicstudents
+                                            .Include(c => c.StudentcodeNavigation)
+                                            .Where(c => c.Topicid == item.Id)
+                                            .OrderBy(c => c.Role);
+
+                foreach (var student in studentList) {
+                    dataList.Add(new string[]
+                    {
+                        index.ToString(),
+                        item.Title,
+                        student.StudentcodeNavigation.Fullname,
+                        student.StudentcodeNavigation.Id,
+                        student.StudentcodeNavigation.Classname,
+                        student.Role ? "Trưởng nhóm" : "Thành viên",
+                        item.CreatedbyNavigation.Fullname,
+                        item.Secondteacher?.Fullname ?? "",
+                        student.StudentcodeNavigation.Phonenumber,
+                        student.StudentcodeNavigation.Email,
+                        ""
+                    });
+                    index++;
+                }
+            }
+
+            // Convert List<string[]> to string[,]
+            string[,] studentDatas = new string[dataList.Count, 11];
+            for (int i = 0; i < dataList.Count; i++) {
+                for (int j = 0; j < 11; j++) {
+                    studentDatas[i, j] = dataList[i][j];
+                }
+            }
+
+            var data = await GenerateReport("Templates/danhsach_sinhvien_dangky_detai.docx", keyValues, studentDatas);
             return data;
         }
-        private async Task<byte[]?> GenerateReport(string templatePath, Dictionary<string, string> keyValues, string[][] dataMatrix2 = null) {
+        private async Task<byte[]?> GenerateReport(string templatePath, Dictionary<string, string> keyValues, string[,] dataMatrix2 = null) {
 
             try {
                 using var memoryStream = new MemoryStream();
@@ -68,9 +107,9 @@ namespace EAUT_NCKH.Web.Services {
                 }
             }
         }
-        private void FillStudentTable(WordprocessingDocument doc, string[][] dataMatrix2) {
+        private void FillStudentTable(WordprocessingDocument doc, string[,] dataMatrix2) {
             var body = doc.MainDocumentPart.Document.Body;
-            var table = body.Elements<Table>().ElementAt(1);
+            var table = body.Elements<Table>().ElementAtOrDefault(1);
             if (table == null)
                 return;
 
@@ -78,27 +117,25 @@ namespace EAUT_NCKH.Web.Services {
             if (rows.Count < 2)
                 return;
 
-            var sampleRow = rows[2]; // Use second row as the sample to clone
+            var sampleRow = rows[2];
 
-            for (int i = 0; i < dataMatrix2.Length; i++) {
-                var rowData = dataMatrix2[i];
+            int rowCount = dataMatrix2.GetLength(0);
+            int colCount = dataMatrix2.GetLength(1);
+
+            for (int i = 0; i < rowCount; i++) {
                 var newRow = (TableRow)sampleRow.CloneNode(true);
                 var cells = newRow.Elements<TableCell>().ToList();
 
-                for (int j = 0; j < cells.Count && j < rowData.Length; j++) {
-                    // Tạo nội dung văn bản
-                    var run = new Run(new Text(j == 0 ? (i + 1).ToString() : rowData[j]));
+                for (int j = 0; j < colCount && j < cells.Count; j++) {
+                    string cellText = dataMatrix2[i, j];
 
-                    // Tạo Paragraph và thêm spacing
+                    var run = new Run(new Text(cellText));
                     var paragraph = new Paragraph(run);
-                    var paragraphProps = new ParagraphProperties();
-                    paragraphProps.Append(new SpacingBetweenLines {
-                        Before = "60", // 3pt
-                        After = "60"   // 3pt
-                    });
+                    var paragraphProps = new ParagraphProperties(
+                new SpacingBetweenLines { Before = "60", After = "60" }
+            );
                     paragraph.PrependChild(paragraphProps);
 
-                    // Gán vào ô
                     cells[j].RemoveAllChildren<Paragraph>();
                     cells[j].Append(paragraph);
                 }
@@ -106,7 +143,8 @@ namespace EAUT_NCKH.Web.Services {
                 table.AppendChild(newRow);
             }
 
-            table.RemoveChild(sampleRow); // Clean up the sample/template row
+            table.RemoveChild(sampleRow);
         }
+
     }
 }

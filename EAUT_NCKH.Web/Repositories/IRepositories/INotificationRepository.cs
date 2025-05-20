@@ -6,5 +6,7 @@ namespace EAUT_NCKH.Web.Repositories.IRepositories {
     public interface INotificationRepository {
 
         public Task<ResponseData<List<Notificationaccount>>> GetNotifications(int senderId, int startNotificationId, int len);
+        public Boolean HasNewNotifi(int senderId);
+        public void SeenNotifi(int senderId);
     }
 }

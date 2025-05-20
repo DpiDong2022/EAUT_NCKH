@@ -123,16 +123,28 @@ namespace EAUT_NCKH.Web.Controllers
 
         [HttpPost("modify-score")]
         [Authorize(Roles = RoleEnums.SCIENTIFIC_RESEARCH_OFFICE)]
-        public async Task<IActionResult> ModifyScore(int score, string topicId, IFormFile files) {
+        public async Task<IActionResult> ModifyScore(int score, int prizeId, string topicId, List<IFormFile> files, string removedImages) {
 
             var token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
             var senderId = _authService.GetAccountIdFromToken(token??"");
 
-            var data = await _topicDeService.ModifyScore(senderId??0, topicId, score, files);
+            var data = await _topicDeService.ModifyScore(senderId??0, prizeId, topicId, score, files, removedImages);
 
             TempData["code"] = data.code;
             TempData["message"] = data.message;
             return RedirectToAction("Index");
+        }
+
+        [HttpGet("get-score-details")]
+        [Authorize(Roles = RoleEnums.SCIENTIFIC_RESEARCH_OFFICE)]
+        public async Task<IActionResult> GetScoreDetails(string topicId) {
+
+            var token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
+            var senderId = _authService.GetAccountIdFromToken(token??"");
+
+            var data = await _topicDeService.GetScoreDetails(senderId??0, topicId);
+
+            return Ok(data);
         }
     }
 }

@@ -39,6 +39,8 @@ public partial class Topic
 
     public virtual Department Department { get; set; } = null!;
 
+    public virtual ICollection<Evaluationimage> Evaluationimages { get; set; } = new List<Evaluationimage>();
+
     public virtual ICollection<Finalresultevaluation> Finalresultevaluations { get; set; } = new List<Finalresultevaluation>();
 
     public virtual ICollection<Finalresult> Finalresults { get; set; } = new List<Finalresult>();

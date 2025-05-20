@@ -112,9 +112,9 @@
                         <th>Tên Đề tài</th>
                         <th>Giảng viên đăng ký</th>
                         <th>Ngày đăng ký</th>
-                        <th class="text-center">Trạng thái</th>
+                        <th width="200px" class="text-center">Trạng thái</th>
                         <th class="text-center">Điểm</th>
-                        <th width="350">Ghi chú</th>
+                        <th>Ghi chú</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -124,12 +124,12 @@
                             <td>
                                 @(++index)
                             </td>
-                            <td width="360" class="p-2 title">
+                            <td class="p-2 title">
                                 <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@topic.EncyptedID" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a>
                             </td>
-                            <td width="230" class="p-2 teachername">@topic.CreatedbyNavigation.Fullname</td>
-                            <td width="110"class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
-                            <td class="p-2 text-center">@topic.StatusNavigation.Name</td>
+                            <td class="p-2 teachername">@topic.CreatedbyNavigation.Fullname</td>
+                            <td class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
+                            <td width="100px" class="p-2 text-center">@topic.StatusNavigation.Name</td>
                             <td class="p-2 text-center">@topic.Defenseassignments?.FirstOrDefault()?.Finalscore</td>
                             <td data-bs-toggle="tooltip" title="@(topic.Note?.Length > 40 ? @topic.Note : "")" class="p-2 note">@(topic.Note?.Length > 40 ? @topic.Note.Substring(0, 40) + "..." : @topic.Note)</td>
                             <td class="text-end ">
@@ -864,13 +864,16 @@
         $("#datatable_form #btn_export").click(GetStudentTopicRegisterdList);
 
         function GetStudentTopicRegisterdList(){
+            $("#page-loader").css("display", "flex");
+            const query = $("#datatable_form").serialize(); // turn form data into query string
             $.ajax({
-                url: '@Url.Action("GetRegisterdTopicList", "Topic")',
+                url: '@Url.Action("GetRegisterdTopicList", "Topic")' + `?${query}`,
                 type: "GET",
                 xhrFields: {
                     responseType: 'blob' // Important for binary data
                 }
             }).then((response) => {
+                $("#page-loader").css("display", "none");
                 const url = window.URL.createObjectURL(response);
                 const a = document.createElement('a');
                 a.href = url;
@@ -881,9 +884,18 @@
                 window.URL.revokeObjectURL(url); // Clean up
             })
             .catch((error) => {
+                $("#page-loader").css("display", "none");
                 $(".modal#error_modal").find("#message").text("Hệ thống lỗi, vui lòng thử lại sau");
                 $(".modal#error_modal").modal("show");
             });
         }
+
+        $("#datatable_form select[name='DepartmentId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
+
+        $("#datatable_form select[name='StatusId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
     </script>
 }

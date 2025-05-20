@@ -42,7 +42,7 @@ namespace EAUT_NCKH.Web.Repositories {
             if (senderAcc == null) { 
                 return new ResponseData<List<Committee>>("NULL");
             }
-            if (senderAcc.Roleid != (int)RoleEnumId.RESEARCH_ADVISOR) {
+            if (senderAcc.Roleid != (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) {
                 option.DepartmentId = senderAcc.Departmentid??-1;
             }
 
@@ -60,7 +60,7 @@ namespace EAUT_NCKH.Web.Repositories {
             if (senderAcc == null) {
                 return 0;
             }
-            if (senderAcc.Roleid != (int)RoleEnumId.RESEARCH_ADVISOR) {
+            if (senderAcc.Roleid != (int)RoleEnumId.SCIENTIFIC_RESEARCH_OFFICE) {
                 option.DepartmentId = senderAcc.Departmentid ?? -1;
             }
 

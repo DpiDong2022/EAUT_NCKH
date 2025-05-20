@@ -771,5 +771,13 @@
             nominateForm.find("input").val(topicId);
             nominateForm.trigger("submit");
         })
+
+        $("#datatable_form select[name='DepartmentId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
+
+        $("#datatable_form select[name='StatusId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
     </script>
 }

@@ -9,6 +9,17 @@
     var allDepartments = ViewBag.AllDepartments as List<Department>;
 }
 
+<style>
+    #imagePreviewContainer img {
+        transition: transform 0.2s ease;
+    }
+
+    #imagePreviewContainer img:hover {
+        transform: scale(1.05);
+        cursor: zoom-in;
+    }
+</style>
+
 <link href="~/css/proposal_assignment.css" rel="stylesheet" />
 
 <div class="p-3 h-100 overflow-auto">
@@ -179,8 +190,8 @@
 </div>
 
 <div class="modal fade no_reset" id="modify_score_modal" tabindex="-1" aria-labelledby="modifyScoreModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content rounded-5">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content rounded-5 h-100">
             <div class="modal-header">
                 <h4 class="modal-title" id="modifyScoreModalLabel">Nhập điểm</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
@@ -188,16 +199,32 @@
             <div class="modal-body">
                 <form id="score_form" asp-controller="TopicDefense" asp-action="ModifyScore" method="post" enctype="multipart/form-data">
                     <input  hidden name="topicId" type="text" />
-                    <div class="form-group mb-3">
-                        <label for="score" class="fw-bold">Điểm cuối cùng</label>
-                        <input type="number" id="score" name="score" class="form-control rounded-4" max="100" min="0" required autofocus>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-group mb-3 w-100">
+                            <label for="score" class="fw-bold">Điểm cuối cùng</label>
+                            <input style="font-size: 18px;" type="number" id="score" name="score" class="form-control-lg form-control rounded-5" max="100" min="0" placeholder="Nhập điểm cuối cùng" required autofocus>
+                        </div>
+                        <div class="form-group mb-3 w-100">
+                            <label for="prizeId" class="fw-bold">Giải thưởng</label>
+                            <select id="prizeId" name="prizeId" class="form-select bg-white form-control rounded-5">
+                                <option value="-1">-- Chọn giải thưởng --</option>
+                                <option value="1">Giải Nhất</option>
+                                <option value="2">Giải Nhì</option>
+                                <option value="3">Giải Ba</option>
+                                <option value="4">Giải Khuyến khích</option>
+                                <option value="5">Không có giải</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group mb-0">
                         <label for="images" class="fw-bold">
                             Hình ảnh minh chứng
                             <span class="text-danger">(Tối đa 20 hình ảnh định dạng *.png, *.jpg)</span>
                         </label>
-                        <input type="file" id="images" name="files" class="form-control form-control-lg fs-6" accept=".png,.jpg" multiple required>
+                        <input type="file" id="images" name="files" class="form-control form-control-lg fs-5" accept=".png,.jpg" multiple required>
+                        <div id="savedImagesContainer" class="d-flex gap-2 flex-wrap mt-3"></div>
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-3 my-3"></div>
+                        <input hidden type="text" name="removedImages" id="removedImagesJson" />
                     </div>
                 </form>
             </div>
@@ -790,5 +817,172 @@
             const topicId = $(this).closest("tr").data("content");
             $("#modify_score_modal").find("input[name='topicId']").val(topicId);
         });
+
+        $("#datatable_form select[name='DepartmentId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
+
+        $("#datatable_form select[name='StatusId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
     </script>
+
+    <script>
+        $(".updateScore").on("click", function() {
+            $("#page-loader").css("display", "flex");
+            $.ajax({
+                url: '@Url.Action("GetScoreDetails")',
+                type: "GET",
+                data: {
+                    topicId: $(this).closest("tr").data("content")
+                }
+            }
+            ).then((res) => {
+                $("#page-loader").css("display", "none");
+                console.log(res);
+                if(!res || res.code != 0){
+                    return;
+                }
+                // load saved data
+                $("#score_form #score").val(res.data.finalscore);
+                $("#score_form #prizeId").val(res.data.prizeId).trigger("change");
+                loadSavedImages(res.data.evaluationimages);
+            }).catch(() => {
+                    $("#page-loader").css("display", "none");
+            })
+        });
+
+        const imagesInput = document.getElementById("images");
+        const previewContainer = document.getElementById("imagePreviewContainer");
+        const savedContainer = document.getElementById("savedImagesContainer");
+
+        let selectedFiles = [];
+        let savedImages = []; // Array of {name, url}
+        let removedImages = [];
+
+        // Load saved images (call this when modal opens in update mode)
+        function loadSavedImages(imagesFromDb) {
+            savedImages = imagesFromDb; // Array of { name: "file.jpg", url: "/uploads/file.jpg" }
+            removedImages = [];
+            renderSavedImages();
+        }
+
+        function renderSavedImages() {
+            savedContainer.innerHTML = "";
+
+            savedImages.forEach((image, index) => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "position-relative";
+
+                const img = document.createElement("img");
+                //img.src = image.url;
+                img.src = image.filepath;
+                img.style.width = "120px";
+                img.style.height = "120px";
+                img.style.objectFit = "cover";
+                img.classList.add("rounded", "border", "shadow-sm", "cursor-pointer");
+
+                img.addEventListener("click", () => {
+                    const win = window.open();
+                    win.document.write('<img src="' + image.filepath + '" style="width: 100%"/>');
+                });
+
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.innerHTML = "&times;";
+                removeBtn.className = "btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle";
+                removeBtn.style.width = "24px";
+                removeBtn.style.height = "24px";
+                removeBtn.style.padding = "0";
+                removeBtn.style.fontSize = "16px";
+                removeBtn.title = "Xóa";
+
+                removeBtn.addEventListener("click", () => {
+                    removedImages.push(image.filepath); // Mark for deletion
+                    savedImages.splice(index, 1);   // Remove from display
+                    renderSavedImages();
+                });
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                savedContainer.appendChild(wrapper);
+            });
+
+            updateRemovedImagesInput();
+        }
+
+        // Hidden input to keep track of deleted saved images
+        function updateRemovedImagesInput() {
+            let input = document.getElementById("removedImagesJson");
+            input.value = JSON.stringify(removedImages);
+            console.log(input.value);
+        }
+
+        imagesInput.addEventListener("change", function() {
+            const files = Array.from(this.files);
+
+            for (let file of files) {
+                if (!file.type.startsWith("image/")) continue;
+                if ((savedImages.length + selectedFiles.length) >= 20) break;
+
+                selectedFiles.push(file);
+            }
+
+            this.value = "";
+            updatePreview();
+        });
+
+        function updatePreview() {
+            previewContainer.innerHTML = "";
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "position-relative";
+
+                    const img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.style.width = "120px";
+                    img.style.height = "120px";
+                    img.style.objectFit = "cover";
+                    img.classList.add("rounded", "border", "shadow-sm", "cursor-pointer");
+
+                    img.addEventListener("click", () => {
+                        const win = window.open();
+                        win.document.write('<img src="' + e.target.result + '" style="width: 100%"/>');
+                    });
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.type = "button";
+                    removeBtn.innerHTML = "&times;";
+                    removeBtn.className = "btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle";
+                    removeBtn.style.width = "24px";
+                    removeBtn.style.height = "24px";
+                    removeBtn.style.padding = "0";
+                    removeBtn.style.fontSize = "16px";
+                    removeBtn.title = "Xóa";
+
+                    removeBtn.addEventListener("click", () => {
+                        selectedFiles.splice(index, 1);
+                        updatePreview();
+                    });
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(removeBtn);
+                    previewContainer.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            updateFormFiles();
+        }
+
+        function updateFormFiles() {
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+            imagesInput.files = dataTransfer.files;
+        }
+    </script>
+
 }

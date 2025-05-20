@@ -9,10 +9,12 @@ namespace EAUT_NCKH.Web.Extensions {
     public class LayoutFilter: IActionFilter {
         private readonly AccountService _accountService;
         private readonly AuthService _authService;
+        private readonly NotificationService _notificationService;
 
-        public LayoutFilter(AccountService accountService, AuthService authService ) {
+        public LayoutFilter(AccountService accountService, AuthService authService, NotificationService notificationaccount ) {
             _accountService = accountService;
             _authService = authService;
+            _notificationService = notificationaccount;
         }
 
         public void OnActionExecuted(ActionExecutedContext context) {}
@@ -26,7 +28,8 @@ namespace EAUT_NCKH.Web.Extensions {
                 var controller = context.Controller as Controller;
                 controller.ViewBag.account = accountInfor.data;
                 controller.ViewBag.roleId = accountInfor.data.Roleid;
-                } catch {
+                controller.ViewBag.HasNewNotifi = _notificationService.HasNewNotifi(userId ?? 0);
+            } catch {
 
             }
         }

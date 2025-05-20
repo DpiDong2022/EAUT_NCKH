@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Drawing.Command;
 using DocumentFormat.OpenXml.Office2019.Excel.RichData2;
 using DocumentFormat.OpenXml.Validation;
+using DocumentFormat.OpenXml.Vml;
 using EAUT_NCKH.Web.Data;
 using EAUT_NCKH.Web.DTOs;
 using EAUT_NCKH.Web.DTOs.Request;
@@ -9,6 +10,7 @@ using EAUT_NCKH.Web.Models;
 using EAUT_NCKH.Web.Repositories.IRepositories;
 using HashidsNet;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace EAUT_NCKH.Web.Repositories {
     public class TopicDefenseRepository: ITopicDefenseRepository {
@@ -367,7 +369,7 @@ namespace EAUT_NCKH.Web.Repositories {
             await _context.Notificationaccounts.AddAsync(notificationAccount);
         }
 
-        public async Task<Response> ModifyScore(int senderId, string topicId, int score, IFormFile files) {
+        public async Task<Response> ModifyScore(int senderId, int prizeId, string topicId, int score, List<IFormFile> files, string removedImages) {
             var senderAcc = _context.Accounts.FirstOrDefault(c =>c.Id == senderId);
             if(senderAcc == null) {
                 return new Response("Lỗi tài khoản");
@@ -388,19 +390,63 @@ namespace EAUT_NCKH.Web.Repositories {
 
             using (var transaction = _context.Database.BeginTransaction()) {
                 try {
+                    if (prizeId == -1) {
+                        prizeId = (int)PrizeEnumId.NO_PRIZE;
+                    }
+
                     var defensescores = topic.Defenseassignments.FirstOrDefault(c => c.Topicid == topic.Id);
                     if (defensescores == null) {
                         var newDefense = new Defenseassignment{
                             Topicid = topic.Id,
-                            Finalscore = score
+                            Finalscore = score,
+                            PrizeId = prizeId
                         };
                         _context.Defenseassignments.Add(newDefense);
+                        _context.SaveChanges();
+                        defensescores = newDefense;
                     } else {
                         defensescores.Finalscore = score;
+                        defensescores.PrizeId = prizeId;
                         defensescores.Updateddate = DateTime.Now;
                         _context.Defenseassignments.Update(defensescores);
+
+                        var images = _context.Evaluationimages.Where(c => c.Topicid == decodedTopicId);
+                        if (images != null) {
+                            _context.Evaluationimages.RemoveRange(images);
+                        }
+                        _context.SaveChanges();
+
+                        if (!string.IsNullOrEmpty(removedImages)) {
+                            var imagePathToRemoves = JsonSerializer.Deserialize<List<string>>(removedImages);
+                            if (imagePathToRemoves != null && imagePathToRemoves.Count > 0) {
+                                foreach (var imageUrl in imagePathToRemoves) {
+                                    var imagePath = System.IO.Path.Combine("wwwroot", imageUrl.TrimStart('/'));
+                                    if (System.IO.File.Exists(imagePath)) {
+                                        System.IO.File.Delete(imagePath);
+                                    }
+                                    var imageObject = _context.Evaluationimages.FirstOrDefault(c => c.Topicid == decodedTopicId && c.Filepath == imageUrl);
+                                    if (imageObject != null) { 
+                                        _context.Evaluationimages.Remove(imageObject);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    
+                    _context.SaveChanges();
+
+                    // save new image files
+                    foreach (var image in files) {
+
+                        var (filePath, fileName) = await SaveEvaluationImage(image);
+                        var evaluationImage = new Evaluationimage{
+                            Filename = fileName,
+                            Filepath = filePath,
+                            Topicid = decodedTopicId,
+                            Defenseassignmentid = defensescores.Id
+                        };
+                        _context.Evaluationimages.Add(evaluationImage);
+                    }
+
                     topic.Status = (int)TopicStatusEnumId.COMPLETED;
                     topic.Updateddate = DateTime.Now;
 
@@ -416,6 +462,50 @@ namespace EAUT_NCKH.Web.Repositories {
                     return new Response("Lỗi hệ thống, vui lòng thử lại sau");
                 }
             }
+        }
+
+        public async Task<ResponseData<Defenseassignment>> GetScoreDetails(int senderId, string encodedTopicId) {
+            var topicId = _hashids.Decode(encodedTopicId).FirstOrDefault();
+            var topic = _context.Topics.FirstOrDefault(c => c.Id == topicId);
+
+            if (topic == null) {
+                return new ResponseData<Defenseassignment> { message="Không tìm thấy đề tài"};
+            }
+
+            if (topic.Status < (int)TopicStatusEnumId.COMPLETED) {
+                return new ResponseData<Defenseassignment> { message = "Đề tài chưa được nhập điểm" };
+            }
+
+            var infor = _context.Defenseassignments
+                .Include(c => c.Evaluationimages)
+                .FirstOrDefault(c => c.Topicid ==  topic.Id);
+
+            return new ResponseData<Defenseassignment> { code = 0, message = "OK", data = infor };
+        }
+
+        private async Task<(string FilePath, string FileName)> SaveEvaluationImage(IFormFile imageFile) {
+
+            // Original file name from user
+            var originalFileName = System.IO.Path.GetFileName(imageFile.FileName);
+
+            // Generate unique file name with same extension
+            var extension = System.IO.Path.GetExtension(originalFileName);
+            var generatedFileName = $"{Guid.NewGuid()}{extension}";
+
+            // Path to save file on disk
+            var imagesFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "KetQuas");
+
+            var fullPath = System.IO.Path.Combine(imagesFolder, generatedFileName);
+
+            // Save file asynchronously
+            using (var stream = new FileStream(fullPath, FileMode.Create)) {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            // Return relative URL to serve image and original file name
+            var relativeUrl = $"/images/KetQuas/{generatedFileName}";
+
+            return (relativeUrl, originalFileName);
         }
     }
 }

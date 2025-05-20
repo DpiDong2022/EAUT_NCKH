@@ -104,9 +104,9 @@
                     <tr class="align-middle">
                         <th width="70">#</th>
                         <th>Tên Đề tài</th>
-                        <th>Giảng viên đăng ký</th>
+                        <th width="180px" >Giảng viên đăng ký</th>
                         <th>Ngày đăng ký</th>
-                        <th class="text-center">Trạng thái</th>
+                        <th width="200px" class="text-center">Trạng thái</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -124,12 +124,12 @@
                                     @(++index)
                                 }
                             </td>
-                            <td width="400" class="p-2 title">
+                            <td class="p-2 title">
                                 <a class="link" asp-controller="Topic" asp-action="Detail" asp-route-target="@topic.EncyptedID" data-bs-toggle="tooltip" title="Xem chi tiết">@topic.Title</a>
                             </td>
-                            <td width="180" class="p-2 teachername">@topic.CreatedbyNavigation.Fullname</td>
-                            <td width="70" class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
-                            <td class="p-2 text-center status">@topic.StatusNavigation.Name</td>
+                            <td width="180px" class="p-2 teachername">@topic.CreatedbyNavigation.Fullname</td>
+                            <td class="p-2">@(topic.Createddate.ToString("dd/MM/yyyy"))</td>
+                            <td width="200px" class="p-2 text-center status">@topic.StatusNavigation.Name</td>
                             <td class="text-end ">
                                 <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
                                     @if (topic.Status == (int)TopicStatusEnumId.PROPOSAL_SUBMITTED) {
@@ -750,5 +750,12 @@
             $(".modal#success_modal").find("#message").text(text);
             $(".modal#success_modal").modal("show");
         }
+
+        $("#datatable_form select[name='DepartmentId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
+        $("#datatable_form select[name='StatusId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
     </script>
 }

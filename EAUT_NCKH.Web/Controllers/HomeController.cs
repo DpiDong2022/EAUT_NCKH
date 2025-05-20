@@ -47,6 +47,14 @@ namespace EAUT_NCKH.Web.Controllers {
             return Ok(data);
         }
 
+        [HttpPost("seen-notification")]
+        public async Task<IActionResult> SeenNotification() {
+            var token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
+            var senderId = _authService.GetAccountIdFromToken(token??"");
+            _notificationService.SeenNotifi(senderId??0);
+            return Ok();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error() {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

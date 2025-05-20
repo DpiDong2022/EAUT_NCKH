@@ -772,6 +772,7 @@ namespace EAUT_NCKH.Web.Repositories {
                     Value = c.Value,
                     Content = c.Criteria.Content,
                     IsScore = (c.Criteria.Type),
+                    MaxScore = (c.Criteria.Maxscore??0).ToString()
                 })
                 .ToList();
             return new ResponseData<List<EvaluationItem>>(0, "OK", data);

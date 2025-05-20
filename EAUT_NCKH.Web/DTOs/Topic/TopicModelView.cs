@@ -38,6 +38,7 @@ namespace EAUT_NCKH.Web.DTOs {
             this.Proposalevaluations = topic.Proposalevaluations;
             this.Finalresults = topic.Finalresults;
             this.Finalresultevaluations = topic.Finalresultevaluations;
+            this.Evaluationimages = topic.Evaluationimages;
 
             // Set the new properties
             this.EncyptedID = encryptedId;
@@ -82,6 +83,7 @@ namespace EAUT_NCKH.Web.DTOs {
             this.Proposalevaluations = topic.Proposalevaluations;
             this.Finalresults = topic.Finalresults;
             this.Finalresultevaluations = topic.Finalresultevaluations;
+            this.Evaluationimages = topic.Evaluationimages;
 
             // Set the new properties
             this.EncyptedID = encryptedId;

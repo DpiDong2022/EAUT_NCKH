@@ -84,9 +84,9 @@
             <table id="mainTable" class="table table-hover table-responsive table-borderless mb-0">
                 <thead>
                     <tr class="align-middle">
-                        <th width="40">#</th>
+                        <th>#</th>
                         <th>Tên Đề tài</th>
-                        <th width="350">Ghi chú</th>
+                        <th>Ghi chú</th>
                         <th class="text-nowrap">Thành viên phê duyệt</th>
                         <th class="">Thuyết minh</th>
                         <th></th>
@@ -233,6 +233,13 @@
         $("#mainTable").on("click", ".approval", async function() { 
             const topicId = $(this).closest("tr").data("content");
             approvalForm.find("input[name='topicId']").val(topicId);
+        })
+
+        $("#datatable_form select[name='DepartmentId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
+        })
+        $("#datatable_form select[name='StatusId']").on("change", () => {
+            $("#datatable_form").trigger("submit");
         })
     </script>
 }

@@ -22,7 +22,9 @@ namespace EAUT_NCKH.Web.Controllers {
             _authService = authService;
         }
 
-        public async Task<IActionResult> Index(CommitteeIndexViewPage options) {
+        public async Task<IActionResult> Index(CommitteeIndexViewPage options, int PageNumber = 1, int PageLength = 10) {
+            options.Pagination.PageNumber = PageNumber;
+            options.Pagination.PageLength = PageLength;
             string token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
             string role = _authService.GetRoleFromToken(token);
             int userId = _authService.GetAccountIdFromToken(token)??0;

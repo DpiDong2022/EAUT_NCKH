@@ -18,7 +18,7 @@
             </div>
         </div>
         <hr />
-        <form asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
+        <form id="mainForm" asp-action="Index" method="post" class="d-flex flex-column align-items-between flex-nowrap gap-3">
             @Html.AntiForgeryToken()
 
             <div class="page_filter d-flex justify-content-between align-items-end flex-nowrap gap-3 mb-4">
@@ -789,6 +789,14 @@
             form.find("input").attr("disabled", false);
             form.find("select").attr("disabled", false);
             $(`#${text.accountModalId} .modal-title`).text("Thêm mới tài khoản");
+        })
+
+        $("#mainForm select[name='DepartmentId']").on("change", () => {
+            $("#mainForm").trigger("submit");
+        })
+
+        $("#mainForm select[name='RoleId']").on("change", () => {
+            $("#mainForm").trigger("submit");
         })
         </script>
 }

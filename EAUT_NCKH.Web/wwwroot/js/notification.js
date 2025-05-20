@@ -10,12 +10,14 @@
 })
 
 $("#notification_see_more").click(function () {
+    $("#see_more_spinner").removeClass("d-none");
     const notiIcon = $("#notification_icon");
     const len = notiIcon.data("len");
-    const start = $("#noti_container li").last().data("content");
+    const start = $("#noti_container li.message_container").last().data("content");
     console.log(start)
 
     GetNotifis(start, 20).then((res) => {
+        $("#see_more_spinner").addClass("d-none");
         if (!res || res.code !== 0 || !res.data) {
             return;
         }
@@ -57,12 +59,12 @@ function RenMoreMessage(data) {
 
     Array.from(data).forEach((noti) => {
         const notiText = RendOneNoti(noti.id, noti.notification.title, noti.createddate, noti.notificationcontent, noti.link);
-        container.prepend(notiText);
+        container.append(notiText);
     })
 }
 
 function RendOneNoti(target, title, date, content, link) {
-    return ` <li data-content="${target}">
+    return ` <li class="message_container" data-content="${target}">
                 <a class="dropdown-item d-flex align-items-start flex-column px-2" href="${link}">
                     <i class="bi bi-envelope me-2 text-primary"></i>
                     <div>
@@ -96,3 +98,19 @@ function getTimeAgo(dateTime) {
         return `${Math.floor(days / 365)} năm trước`;
     }
 }
+
+function showLoading() {
+    $("#noti_container").append("<li id='noti_loading' class='text-center'>Đang tải...</li>");
+}
+
+function hideLoading() {
+    $("#noti_loading").remove();
+}
+
+$("#notification_icon").on("click", function () {
+    $(this).find(".news").addClass("d-none");
+    $.ajax({
+        url: "/trang-chu/seen-notification",
+        type: "POST"
+    });
+})

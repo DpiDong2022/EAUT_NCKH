@@ -89,6 +89,7 @@ namespace EAUT_NCKH.Web.Repositories
             var query = _context.Topics
             .Include(t => t.Department)
             .Include(t => t.CreatedbyNavigation)
+            .Include(t => t.Secondteacher)
             .Include(t => t.StatusNavigation)
             .Include(t => t.Defenseassignments)
             .Where(c =>
@@ -289,7 +290,9 @@ namespace EAUT_NCKH.Web.Repositories
                 .ThenInclude(c => c.Role)
                 .Include(c => c.Finalresults)
                 .Include(c => c.Finalresultevaluations)
+                .Include(c => c.Evaluationimages)
                 .Include(c => c.Defenseassignments)
+                .ThenInclude(c => c.Prize)
                 .FirstOrDefaultAsync(c => c.Id == decodedID);
 
             var topicModelView = new TopicModelView(topic, id);
