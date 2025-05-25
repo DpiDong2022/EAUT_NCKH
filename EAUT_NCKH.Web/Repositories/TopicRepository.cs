@@ -62,6 +62,7 @@ namespace EAUT_NCKH.Web.Repositories
             }
 
             var topics = _context.Topics
+                .Include(c => c.Topicstudents)
                 .Where(c =>
                     (options.DepartmentId == -1 || c.Departmentid == options.DepartmentId)
                     && (options.Year == -1 || c.Year == options.Year)
@@ -71,6 +72,10 @@ namespace EAUT_NCKH.Web.Repositories
             if (senderAccount?.Roleid == (int)RoleEnumId.RESEARCH_ADVISOR) {
                 topics = topics.Where(c => c.Createdby == senderAccount.Id
                 || (c.Secondteacher != null && c.Secondteacher.Id == senderAccount.Id));
+            }
+
+            if (senderAccount?.Roleid == (int)RoleEnumId.STUDENT) {
+                topics = topics.Where(c => c.Topicstudents.Any(s => s.Studentcode == senderAccount.Students.First().Id));
             }
             var count = await topics.CountAsync();
             return count;

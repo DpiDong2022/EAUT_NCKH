@@ -79,7 +79,7 @@ namespace EAUT_NCKH.Web.Repositories {
                 item.Isread = true;
             }
             _context.Notificationaccounts.UpdateRange(unReadNotifications);
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
     }
 }

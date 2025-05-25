@@ -370,9 +370,9 @@
                         </div>
                     </div>
                 }
-                @if (topic.Status >= (int)TopicStatusEnumId.FINAL_SUBMITTED) {
+                @if (topic.Status >= (int)TopicStatusEnumId.FINAL_REVIEW_ASSIGNMENT) {
                     var commmittee2 = topic.Committees.FirstOrDefault(c => c.Typeid == (int)CommitteeTypeEnumId.FINAL_COMMITTEE);
-                    var comMembers2 = commmittee2.Committeemembers.OrderBy(c => c.Roleid);
+                    var comMembers2 = commmittee2?.Committeemembers.OrderBy(c => c.Roleid);
                     <div class="row">
                         <div class="col col-3 fw-bold">
                             Tên Hội đồng:

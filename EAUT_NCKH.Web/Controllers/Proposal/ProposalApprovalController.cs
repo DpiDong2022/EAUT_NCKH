@@ -23,7 +23,8 @@ namespace EAUT_NCKH.Web.Controllers {
         }
 
         [Authorize]
-        public async Task<IActionResult> Index(ProposalAssignedIndexViewPage options) {
+        public async Task<IActionResult> Index(ProposalAssignedIndexViewPage options, int PageNumber = 1) {
+            options.Pagination.PageNumber = PageNumber;
             string token = HttpContext.Session.GetString(SessionType.USER_TOKEN);
             string role = _authService.GetRoleFromToken(token);
             int userId = _authService.GetAccountIdFromToken(token)??0;
